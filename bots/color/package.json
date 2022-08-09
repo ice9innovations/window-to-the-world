@@ -1,0 +1,28 @@
+{
+  "name": "snailbot",
+  "version": "1.0.0",
+  "description": "Snail Vision! This bot mimics the vision of a snail (poorly)",
+  "main": "inception.js",
+  "scripts": {
+    "start": "node snail.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "color-thief": "^2.2.5",
+    "dotenv": "^16.0.1",
+    "fast-average-color": "^7.1.0",
+    "onecolor": "^3.1.0",
+    "uuid": "^8.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adunderwood/SnailBot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/adunderwood/SnailBot/issues"
+  },
+  "homepage": "https://github.com/adunderwood/SnailBot#readme"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "ocrbot",
+  "version": "1.0.0",
+  "description": "A bot to read text using the Tesseract OCR library",
+  "main": "inception.js",
+  "scripts": {
+    "start": "node ocr.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.1",
+    "node-tesseract-ocr": "^2.2.1",
+    "uuid": "^8.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adunderwood/OCRbot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/adunderwood/OCRbot/issues"
+  },
+  "homepage": "https://github.com/adunderwood/OCRbot#readme"
+}
