@@ -1,2 +1,2 @@
-# window-to-the-world
-Main Repo
+# Window to the World
+by Ice 9 Innovations
