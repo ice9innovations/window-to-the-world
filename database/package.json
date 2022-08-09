@@ -1,0 +1,22 @@
+{
+  "name": "database",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "formidable": "^2.0.1",
+    "fs": "0.0.1-security",
+    "http": "0.0.1-security",
+    "image-thumbnail": "^1.0.15",
+    "mongodb": "^4.6.0",
+    "querystring": "^0.2.1",
+    "uuid": "^8.3.2"
+  }
+}

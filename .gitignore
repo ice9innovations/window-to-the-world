@@ -1,5 +1,8 @@
 node_modules/
+tmp/
 Dockerfile
 .env
+.env.test
 *.log
-tmp/
+*.zip
+*.tgz

@@ -1,0 +1,5 @@
+.env
+.env.test
+node_modules
+*.zip
+*.tgz
