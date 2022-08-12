@@ -23,3 +23,7 @@ In practical terms, Window to the World's abilities are based on its architectur
 [Read More](./practice.md)
 
 ## Installation
+
+We are still in the process of releasing code and creating deployment scripts. We will update the installation guide as we go.
+
+[Installation Guide](./install.md)
