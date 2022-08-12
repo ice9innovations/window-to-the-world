@@ -19,8 +19,6 @@ Window to the World consists of several parts:
 
 Data comes from the data source as part of a data stream. It enters the queue, where Window to the World processes it. Data about the data stream, as well as predictions from Window to the World and validation from the user, is stored in the database, and then the stream is emptied from the queue. Window to the World processes data through the use of multiple modules, or bots. 
 
-![window-to-the-world-process-diagram](https://user-images.githubusercontent.com/110870907/184448845-1e10980f-7e24-4f07-a4bf-6a3631f4208a.png)
-
 ### Bot-based Architecture 
 
 Window to the World's bots are all modular and are designed to run asynchronously. More about that in the implementation section. These modules are of various types: data analysis, decision, and cognitive. Data analysis modules consist of various models designed to analyze the data stream. This can be anything from simply determining the file type and size to other machine learning (ML) models (such as object detectors or other identification modules). The decision modules are designed to make decisions and predictions based on Window to the World's current knowledge, and the cognitive models are designed to categorize and store data about the user and file stream in the database to be used later by the decision models.
@@ -52,6 +50,8 @@ Thus Window to the World's "experience" of the file and its "memory" of the file
 ## Data Storage
 
 Much of Window to the World's ability to process data efficiently comes from the way that data is stored. Window to the World stores data in two main ways: cognitive maps and categorization trees. While this model was created before doing any research, a paper by Popham et al. in Nature Neuroscience (2021) provided excellent confirmation that this strategy was not only valid but also mirrored data storage strategies used by biology.
+
+![window-to-the-world-process-diagram](https://user-images.githubusercontent.com/110870907/184448845-1e10980f-7e24-4f07-a4bf-6a3631f4208a.png)
 
 ## Cognitive Maps
 
