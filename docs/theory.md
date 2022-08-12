@@ -1,4 +1,4 @@
-# Window to the World - In Theory
+# In Theory
 
 The theory behind Window to the World is detailed but can be broken down into two main parts: consciousness and preference. 
 
