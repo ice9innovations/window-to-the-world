@@ -1,4 +1,4 @@
-# Window to the World - In Practice
+# In Practice
 
 In practical terms, Window to the World's abilities are based on its architecture and data storage. Window to the World is also an open-box system.
 
