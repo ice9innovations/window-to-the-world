@@ -6,9 +6,10 @@ Installing Window to the World is complicated right now as we do not have a depl
 
 ### For the Dorothy Engine:
 
-*  MongoDB
 *  NodeJS
 *  Python
+*  OpenCV
+*  MongoDB
 
 ## For the Web Server
 
