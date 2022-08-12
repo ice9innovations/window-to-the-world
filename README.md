@@ -1,5 +1,5 @@
 # Window to the World
-A product by Ice 9 Innovations
+A product by [Ice 9 Innovations](https://ice9.ai)
 
 Window to the World is a window that watches you. It learns your preferences and shows you what you want to see. It gives you more of what you like and less of what you don’t.
 
