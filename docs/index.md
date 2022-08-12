@@ -12,7 +12,8 @@ Window to the World is unique in several ways. First is its input: it is data-ag
 
 The theory behind Window to the World is detailed but can be broken down into two main parts: consciousness and preference.
 
-[Read More](./theory.md)
+* [Consciousness](./theory.md#consciousness)
+* [Preference](./theory.md#preference)
 
 ## Practice
 
