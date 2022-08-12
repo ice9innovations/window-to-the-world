@@ -12,6 +12,6 @@ https://window-to-the-world.org
 ## Documentation
 
 *  [Introduction](./docs/index.md)
-*  [Theory](./theory.md)
-*  [Practice](./practice.md)
-*  [Installation Guide](./install.md)
+*  [Theory](./docs/theory.md)
+*  [Practice](./docs/practice.md)
+*  [Installation Guide](./docs/install.md)
