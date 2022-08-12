@@ -1,4 +1,7 @@
 # Window to the World
+
+<a href="https://window-to-the-world.org"><img src="https://user-images.githubusercontent.com/110870907/184449594-8809ecc1-cbbe-4471-bb6c-ee2fb7d43338.png" align="right" width="30%"></a>
+
 A product by [Ice 9 Innovations](https://ice9.ai)
 
 Window to the World is a window that watches you. It learns your preferences and shows you what you want to see. It gives you more of what you like and less of what you don’t.
