@@ -1,4 +1,3 @@
-inc/
 secret.php
 db.php
 *.sql
