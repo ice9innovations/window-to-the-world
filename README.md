@@ -17,4 +17,5 @@ https://window-to-the-world.org
 *  [Introduction](./docs/index.md)
 *  [Theory](./docs/theory.md)
 *  [Practice](./docs/practice.md)
+*  [References](./docs/references.md)
 *  [Installation Guide](./docs/install.md)
