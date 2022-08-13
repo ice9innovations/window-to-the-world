@@ -19,14 +19,14 @@ Installing Window to the World is complicated right now as we do not have a depl
 *  Kubernetes
 
 ## To install the Dororthy Engine on a Single Machine 
-#### Note: This configuration is not recommended for production use
-#### Note: This example uses Debian but will work on any distro
+
+**Note: This example uses Debian but will work on any distro**
 
 ### Clone this repository 
 
 <code>git clone git@github.com:ice9innovations/window-to-the-world.git</code>
 
-### Install Node and PM2
+### Install NodeJS and NPM
 
 <code>
 sudo apt install npm
@@ -100,6 +100,42 @@ Refer to this Stack Overflow discussion if you get stuck:
 
 https://stackoverflow.com/questions/64567610/permission-denied-while-trying-to-install-opencv4nodejs-in-ubuntu
 
+### Create an enviornment file
+
+Copy the .env file into each bot directory. 
+
+<code>sudo nano .env</code>
+
+<code>
+HOSTNAME=""
+PORT=""
+ALLOWED="0.0.0.0,127.0.0.1"
+</code>
+
+### Install the database bots
+
+Edit the .env file to include database connection information. Hostname and port is specified in each script. You may install your own MongoDB server or use a MongoDB Cloud Atlas instance.
+
+<code>sudo nano .env</code>
+
+DB_USERNAME=""
+DB_PASSWORD=""
+ALLOWED="127.0.0.1,178.62.236.25,198.199.97.163,143.198.128.94"
+
+<code>cd bots/database</code>
+
+<code>npm install</code>
+
+<code>pm2 start backpropagate</code>
+
+<code>pm2 start retrieve</code>
+
+<code>pm2 start retrieve_colors</code>
+
+<code>pm2 start retrieve_emojis</code>
+
+<code>pm2 start store</code>
+
 #### Save your PM2 configuration
 
 <code>pm2 save</code>
@@ -108,12 +144,30 @@ Make sure the bots will start back on boot
 
 <code>pm2 boot</code>
 
+**This configuration is not recommended for production use**
+
+#### Production Use
+
+Do the same thing but with Docker...
+
 ### For the Web Server
 
 *  Linux
 *  Apache
 *  MySQL
 *  PHP
+
+#### Install Apache
+
+<code>sudo apt install apache2</code>
+
+#### Install PHP & Extensions
+
+<code>sudo apt install php</code>
+
+#### Install PHP & Extensions
+
+<code>sudo apt install mysql-server</code>
 
 ## Tech Notes 
 
