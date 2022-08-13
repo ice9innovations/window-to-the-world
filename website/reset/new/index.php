@@ -1,0 +1,333 @@
+<?PHP 
+
+include("../inc/header.php"); 
+unset($_SESSION['username']);
+
+?>
+
+<style>
+    .spacer { height: 20px; }
+
+    #btn_submit,
+    #form_step_two {
+        display: none;
+    }
+
+    DIV.hr {
+        margin-top: 2em;
+        margin-bottom: 2em;
+    }
+
+    #picture.complete {
+        color: #777;
+        width: 100%;
+
+        cursor: pointer;
+
+        background: #eee;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        outline: 0;
+
+        text-align: center;
+        padding: 10px 0;
+
+        margin: 30px 0;
+    }
+
+    #picture.complete SPAN {
+        display: none;
+    }
+    
+    #picture.complete::before {
+        display: block;
+        font-family: "FontAwesome"; 
+        font-weight: 400; 
+        content: "\f058";
+        text-indent: 0;
+        margin: 0 auto;
+    }
+
+</style>
+
+<body class="logged-out" onload="init()">
+    <main>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-6">
+                    <div class="graphic">
+                        <a href="#" onclick="porthole()"><img class="porthole" src="/images/porthole-empty.png" alt="Window to the World"></a>
+                        <div id="porthole-cover" class="porthole-cover"></div>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-6">
+                    <div class="spacer"></div>
+
+                    <h2><a href="/">Window to the World</a></h2>
+                    <h3><a href="https://ice9.ai">Ice 9 Innovations</a></h3>
+                    
+                    <div class="container nopadding">
+                        <div class="row">
+                            <div class="col">
+
+                                <div id="error_message"></div>
+
+                                <form id="login" class="login" action="process_login.php" method="POST" enctype="multipart/form-data" onsubmit="return checkNext()">
+
+                                    <div id="form_step_one">
+                                        <h4>Sign In <span class="or">or <a href="/register">Create a Free Account</a></span></h4>
+                                        <p id="validate_phone">
+                                            <label for="phone">Phone Number or Email Address</label>
+                                            <input type="text" id="phone" name="phone">
+                                            <span class="message">Phone or email is required</span>
+                                        </p>
+                                    </div>
+
+                                    <div id="form_step_two">
+                                        <h4>Sign In <span class="or"> or <a href="/register">Create a Free Account</a></span></h4>
+
+                                        <p id="validate_file">
+                                            <label id="picture" for="pic"><span>Select your Pass-Photo&trade;</span></label>
+                                            <input class="file" type="file" id="pic" name="pic" onchange="checkFile()">
+                                            <span class="message" style="margin-top: -22px;">Your Pass-Photo&trade; is your password!</span>
+                                        </p>
+                                    </div>
+                                    
+                                    <div id="btn_next" class="container nopadding">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                                <p>
+                                                    <input class="login-submit" type="button" name="next" value="Next" onclick="getStep(2)">
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="btn_submit" class="container nopadding">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-lg-3">
+                                                <p>
+                                                    <input id="submit" name="submit" class="login-submit" type="submit" value="Sign In">
+                                                </p>
+                                            </div>
+                                            
+                                            <div class="col-sm-12 col-lg-9">
+                                                <p class="TOC">
+                                                    <i class="fa-solid fa-square-check"></i>
+                                                    I agree to the <a href="/toc">Terms and Conditions</a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </form>
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="help">Help! I can't access my account. <a href="/reset">Reset my Pass-Photo</a></p>
+
+                    <div class="terms">
+
+                        <p>
+                        By using this system, you consent to the following conditions.
+                        These are not my images. They are randomly loaded from imgur. Because of that they could contain literally anything you can take a picture of. I take no responsibility for these images. They are NOT hosted on this server. They will not be seen by anyone but you and anyone else looking at your screen. To report an image, please report it at Imgur, the source of the data.
+                        </p>
+
+                        <p>
+                        This project is intended to be a filter for these images. As it develops we will add nudity filters and other filters to make this datastream more pleasant to look at. In the meantime, enter at your own risk.
+                        <strong>You must be 18 to continue.</strong>
+
+                        </p>  
+                        
+                        <!--
+                        <p>
+                            By using our innovative new 
+                            system, we are able to show people exactly what they want to see, 
+                            when they want to see it. This means that people can get the information
+                            they need, when they need it, without having to search multiple websites.     
+                        </p>
+                        -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var step = 0
+        
+        function checkNext() {
+            var ret = false
+            if (step >= 1) {
+                ret = validate()
+            } else {
+                getStep(2)
+            }
+
+            return ret
+        }
+        
+        function getStep(which) {
+            step = which
+
+            console.log("get step")
+            var valid = false
+            valid = validateField("phone")
+            if (valid) {
+                hideAllSteps()
+
+                var el_id, btn_id
+                switch (which) {
+                    case 1:
+                        el_id = "form_step_one"
+                        btn_id = "btn_next"
+
+                        // remove complete flag
+                        var file = document.getElementById("picture")
+                        file.classList.remove("complete")
+
+                        break;
+                    case 2:
+                        el_id = "form_step_two"
+                        btn_id = "btn_submit"
+                        break;
+                }
+
+                var el, btn
+                if (el_id) { el = document.getElementById(el_id) } // get the html element
+                if (el) { el.style.display = "block"; } // show it
+
+                if (btn_id) { btn = document.getElementById(btn_id) } // get the button element
+                if (btn) { btn.style.display = "block"; } // show it
+            }
+        }
+
+        function hideAllSteps() {
+            var step1 = document.getElementById("form_step_one")
+            var step2 = document.getElementById("form_step_two")
+            var next = document.getElementById("btn_next")
+            var submit = document.getElementById("btn_submit")
+
+            var els = [step1, step2, next, submit]
+            for (var i = 0; i < els.length; i++) {
+                var el = els[i]
+                el.style.display = "none";
+            }
+        }
+
+        function validate() {
+            validateClear()
+            
+            var valid = true 
+
+            valid = validateField("phone")
+            valid = validateField("file")
+            
+            var phone = document.getElementById("phone")
+
+            if (!(phone.value)) {
+                var validate_phone = document.getElementById("validate_phone")
+                validate_phone.classList.add("validate")
+                valid = false
+            }
+
+            return valid
+        }
+
+        function validateField(field) {
+            // get fields
+            var phone = document.getElementById("validate_phone")
+            var file = document.getElementById("validate_file")
+
+            var valid = true
+            var val = "validate_"
+            switch (field) {
+                case "phone":
+                    var el = document.getElementById("phone")
+                    var val = el.value
+
+                    // value exists, validate
+                    if (!(val)) {
+                        phone.classList.add("validate")
+                        valid = false
+                    }
+                    break
+                case "file":
+                    var el = document.getElementById("pic")
+                    var val = el.value
+
+                    if (!(val)) {
+                        file.classList.add("validate")
+                        valid = false
+                    }
+                    break
+            }
+
+            return valid
+        }
+
+        function checkFile() {
+            var valid = false
+            valid = validateField("file")
+
+            if (valid) {
+                var el = document.getElementById("picture")
+                el.classList.add("complete")
+
+                var validate_file = document.getElementById("validate_file")
+                validate_file.classList.remove("validate")
+            }
+        }
+        
+        const validateEmail = (email) => {
+            return String(email)
+                .toLowerCase()
+                .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                )
+        }
+
+        const validatePhone = (phone) => {
+            return String(phone)
+                .match(
+                    /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im
+                )
+        }
+
+        function validateClear() {
+            // clear all validation messages
+            var validate_phone = document.getElementById("validate_phone")
+            var validate_file = document.getElementById("validate_file")
+
+            validate_phone.classList.remove("validate")
+            validate_file.classList.remove("validate")
+        }
+
+    
+        function validateServer() {
+            var qs = window.location.search
+
+            var error_text = ""
+            if (qs.includes("not_uploaded")) { error_text = "There was an error uploading the file" }
+            if (qs.includes("not_an_image")) { error_text = "This is not an image file" }
+            if (qs.includes("too_large")) { error_text = "That file is too large" }
+            if (qs.includes("mime_type")) { error_text = "Unsupported image format" }
+            if (qs.includes("server_error")) { error_text = "Server error" }
+            if (qs.includes("upload_error")) { error_text = "Upload error" }
+            if (qs.includes("not_found")) { error_text = "These are not the droids you are looking for." }
+                                    
+            if (error_text) {
+                var el = document.getElementById("error_message")
+                el.innerHTML = error_text
+                el.style.display = "block"
+            }
+        }
+
+        validateServer()
+            
+    </script>
+</body>
+
+<?PHP include("../inc/footer.php"); ?>

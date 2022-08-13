@@ -1,0 +1,4 @@
+<?
+?>
+
+User is logged out.
