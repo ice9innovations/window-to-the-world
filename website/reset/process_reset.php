@@ -11,6 +11,7 @@ require '../inc/secret.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+error_reporting(E_ERROR);
 
 use Twilio\Rest\Client;
 
@@ -80,9 +81,9 @@ if(isset($_POST["submit"])) {
             $email = "";
             $phone = "";
 
-            while($row = $result->fetch_assoc()) {
+            while($row = $result->fetch_assoc()) {            
                 // retrieve the user's contact info
-                $userID = $row["userID"];
+                $userID = $row["userID"];                    
 
                 if ($row["email"]) {
                     $email = $row["email"];
@@ -117,12 +118,14 @@ if(isset($_POST["submit"])) {
                     $reset = "email"; //urlencode(base64_decode($email));
                 }
             }
+            
         }
     }
 
     $conn->close();
 
-    //echo $redirect
+    //echo $redirect;
+    
     $redirect = "/reset/?reset=" . $reset;
     header("Location: " . $redirect);
 }
@@ -157,7 +160,7 @@ function sendEmail($to, $time_code) {
     );
 
     // send email
-    $sendgrid = new \SendGrid($api); //getenv('SENDGRID_API_KEY')
+    $sendgrid = new \SendGrid($api_sendgrid); //getenv('SENDGRID_API_KEY')
     try {
         $response = $sendgrid->send($email);
         print $response->statusCode() . "\n";
