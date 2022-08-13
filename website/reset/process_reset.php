@@ -11,7 +11,6 @@ require '../inc/secret.php';
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
-error_reporting(E_ERROR);
 
 use Twilio\Rest\Client;
 
@@ -81,9 +80,9 @@ if(isset($_POST["submit"])) {
             $email = "";
             $phone = "";
 
-            while($row = $result->fetch_assoc()) {            
+            while($row = $result->fetch_assoc()) {
                 // retrieve the user's contact info
-                $userID = $row["userID"];                    
+                $userID = $row["userID"];
 
                 if ($row["email"]) {
                     $email = $row["email"];
@@ -118,14 +117,12 @@ if(isset($_POST["submit"])) {
                     $reset = "email"; //urlencode(base64_decode($email));
                 }
             }
-            
         }
     }
 
     $conn->close();
 
-    //echo $redirect;
-    
+    //echo $redirect
     $redirect = "/reset/?reset=" . $reset;
     header("Location: " . $redirect);
 }
@@ -134,25 +131,19 @@ if(isset($_POST["submit"])) {
 function sendText($to, $time_code) {
     $sms = 'Reset your Window to the World Password: https://window-to-the-world.org/reset/new/?phone=' . $to . '&reset=' . $time_code;
 
-    $account_sid = 'AC36cfa4acccbe03d9820e6898cd131364';
-    $auth_token = 'd2ed84ab50af1cebadc58b057f3a0702';
-    $twilio_number = "+18559996768"; // Twilio number you own
-  
     $client = new Client($account_sid, $auth_token);
     // Below, substitute your cell phone
     $client->messages->create(
-        '+19198273185',  
+        $to,
         [
             'from' => $twilio_number,
             'body' => $sms
-        ] 
+        ]
     );
   }
 
 function sendEmail($to, $time_code) {
     // create email
-    $api = "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";
-
     $html= '<a href="https://window-to-the-world.org/reset/new/?email=' . $to . '&reset=' . $time_code . '">Reset your Window to the World Password</a>';
     $txt = 'Reset your Window to the World Password:\n\n https://window-to-the-world.org/reset/new/?email=' . $to . "&reset=" . $time_code;
 
