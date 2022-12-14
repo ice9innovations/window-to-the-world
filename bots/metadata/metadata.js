@@ -36,6 +36,8 @@ const server = http.createServer((req, res) => {
   var ip_from_node = req.socket.remoteAddress
 
   var allowedList = process.env.ALLOWED
+
+  if (process.env.ALLOWED) {
   var aList = allowedList.split(",")
 
   var allowed = false
@@ -44,6 +46,9 @@ const server = http.createServer((req, res) => {
     if (ip_from_node == ip_from_list) {
       allowed = true
     }
+  }
+  } else {
+    allowed = true
   }
 
   // only accept requests from known hosts

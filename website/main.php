@@ -1,5 +1,5 @@
 <?PHP 
-if (isset($_SESSION['username'])) {
+//if (isset($_SESSION['username'])) {
 ?>
 
 <!DOCTYPE html>
@@ -18,7 +18,7 @@ if (isset($_SESSION['username'])) {
     <link rel="manifest" href="/site.webmanifest">
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
 
-    <link rel="stylesheet" href="./main.css">
+    <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 
     <script
@@ -26,7 +26,8 @@ if (isset($_SESSION['username'])) {
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
         crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
-    <script src="longclick.js" type='text/javascript'></script>
+
+    <script src="/js/pluralize.js"></script>
 
     <script>
         // primary application settings
@@ -34,10 +35,10 @@ if (isset($_SESSION['username'])) {
         var ITERATE = 2 // number of images per batch
         var SPEED = 30 // * 1000 ms, rate of delete
         var SCREEN_SIZE = 6
-        var BUFFER_SCREENS = 2
+        var BUFFER_SCREENS = 3
         var AD_RATE = 1 // percent
         var PD_RATE = 5 // public domain images
-        var BACKPROP_RATE = 5
+        var BACKPROP_RATE = -1
 
         var initialized = false
         
@@ -151,7 +152,7 @@ if (isset($_SESSION['username'])) {
                             var tmpCls = ""
                             var aColors = preds.colors
 
-                            var page = document.getElementById("chantilly")
+                            //var page = document.getElementById("chantilly")
                             setPageBackground(cur)
 
                             var rndCol = Math.floor(Math.random() * aColors.length - 1)
@@ -223,8 +224,6 @@ if (isset($_SESSION['username'])) {
         }
 
         function setPageBackground(which) {
-            var preds = updatePrediction(which)
-
             //console.log("PAGE BACKGROUND: " + which)
             //console.log(preds)
             var tile = document.getElementById('tile')
@@ -233,77 +232,10 @@ if (isset($_SESSION['username'])) {
             var bkg = ""
             var chosen = false
             var anim = false
-            if (preds) {
-                if (preds.emojis) {
-                    var emos = preds.emojis
-                    for (var i = 0; i < emos.length; i++) {
-                        var emo = emos[i]
-                        var unicode = emo.codePointAt(0).toString(16).toUpperCase()
-
-                        //if (!(chosen)) {
-                            var clear = false
-                            switch (unicode) {
-                                case "26F2":
-                                case "1F3D6":
-                                case "1F30A":
-                                case "1F334":
-                                    bkg = '/images/bkg/waves.png'
-                                    chosen = true
-                                    break
-                                case "1F4F1":
-                                    bkg = '/images/bkg/phone.png'
-                                    chosen = true
-                                    break
-                                // text
-                                case "1F4AC":
-                                    bkg = '/images/bkg/letters.jpg'
-                                    chosen = true
-                                    break
-                                // bubbles
-                                case "1F558":
-                                case "1F526":
-                                case "1F369":
-                                case "1F37D":
-                                case "231A":
-                                case "23F0":
-                                case "23F1":
-                                case "26AA":
-                                case "1F3D0":
-                                case "1F41F":
-                                case "1F6A4":
-                                    bkg = '/images/bkg/bubbles.png'
-                                    chosen = true
-                                    break
-                                // clear the background for these
-                                case "1F4C4":
-                                    //bkg = ""
-                                    clear = true
-                                    chosen = true
-                                    break
-                                // animated gif
-                                case "1F3AC":
-                                case "1F41F":
-                                case "1F3A5":
-                                    var gif = el.src
-                                    gif = gif.replace("b.jpg",".jpg")
-
-                                    bkg = gif
-                                    //console.log("ANIMATED GIF: " + gif)
-                                    chosen = true
-                                    anim = true
-                                    break
-                            }
-                        //}
-
-                        // clear 
-                        //if (clear) { bkg = "" }
-                    }
-                }
-            }
 
             if (!(anim)) {
                 bkg = "" // temporary clear
-            } 
+            }
 
             if (bkg) {
                 console.log(bkg)
@@ -354,10 +286,14 @@ if (isset($_SESSION['username'])) {
 
             var confirmed = []
             var confirmed_emojis = []
+            var g = document.getElementById("guess")
 
             if (img) {
-                image_tags = img.className.split(" ")
-                caption = img.alt 
+                var cn = ""
+                if (img.className) { cn = img.className }
+
+                image_tags = cn.split(" ")
+                caption = img.alt
 
                 // lookup emoji in emoji table
                 // loop entire emoji table
@@ -382,8 +318,57 @@ if (isset($_SESSION['username'])) {
                 }
 
                 if (caption) {
+                    var yolo7 = ""
+                    // collect caption from YOLO and add to combined caption
+                    for (var i = 0; i < image_tags.length; i++) {
+                        var t = image_tags[i]
+
+                        if (t.includes("YOLO")) {
+                            yolo7 = t.replace("YOLO-","").replace(/-/g," ")
+                        }
+                    }
+
+                    combined_caption = img.alt + " " + img.title + " " + yolo7// append title to alt to compare both 
                     var object_tags = []
-                    //var emojis_from_caption = emojisFromCaption(caption)
+                    var emojis_from_caption = emojisFromCaption(combined_caption)
+                    
+                    //console.log("EMOJIS FROM CAPTION")
+                    //console.log(emojis_from_caption)
+
+                    var final_el = document.getElementById("guess-final")
+                    var guess_el = document.getElementById("guess")
+                    var cpt_el = document.getElementById("guess-from-caption")
+                    var cpt_val = (guess_el.innerHTML + " " + emojis_from_caption.join(" ")).replace(","," ")
+
+                    acpt = cpt_val.split(" ")
+                    acpt = acpt.sort()
+
+                    //cpt_el.innerHTML = acpt.join(" ")
+
+                    var count = {};
+                    acpt.forEach(element => {
+                        count[element] = (count[element] || 0) + 1;
+                    }) 
+
+
+                    var first_place = ""
+                    var second_place = ""
+                    for (var emo in count) {
+                        cnt = count[emo]
+                        if (cnt != 1) {
+                            if (emo) {
+                                first_place += emo + " "
+                            }
+                        } else {
+                            if (emo) {
+                                second_place += emo + " "                                
+                            }
+                        }
+                        //console.log(emo + ": " + cnt)
+                    }
+
+                    final_el.innerHTML = first_place
+                    cpt_el.innerHTML = second_place
 
                     // collect object and multi tags from the image
                     for (var i = 0; i < image_tags.length; i++) {
@@ -420,7 +405,7 @@ if (isset($_SESSION['username'])) {
                     var person_from_caption = false
                     var person_from_tags = false
                     
-                    person_from_caption = captionConfirmPerson(caption)
+                    person_from_caption = captionConfirmPerson(combined_caption)
                     person_from_tags = captionConfirmPerson(object_tags.join(" "))
 
                     if (person_from_caption && person_from_tags) {
@@ -432,11 +417,12 @@ if (isset($_SESSION['username'])) {
                     // check for matching words
                     for (var i = 0; i < object_tags.length; i++) {
                         var tag = object_tags[i]
-                        if (caption.includes(tag)) {
+                        if (combined_caption.includes(tag)) {
                             confirmed.push(tag)
 
                             var emo = findEmoji(tag.replace(/ /g,"_"))
-                            if (emo) { 
+
+                            if (emo) {
                                 confirmed_emojis.push(emo)
                             }
 
@@ -448,13 +434,23 @@ if (isset($_SESSION['username'])) {
             }
             
             // remove duplicates
+            confirmed_duplicates = confirmed_emojis
             confirmed = [...new Set(confirmed)]
-            confirmed_emojis = [...new Set(confirmed_emojis)]
+            //confirmed_emojis = [...new Set(confirmed_emojis)]
             //emojis_from_caption = [...new Set(confirmed_emojis)]
+            
 
             // corroborate final list
-            var guess = document.getElementById("guess").innerHTML
+            var guess_el = document.getElementById("guess")
+            var guess = guess_el.innerHTML
             var final = []
+            
+            //console.log("CONFIRMED")
+            //console.log(confirmed_emojis)
+
+            guess_el.innerHTML = ""
+            guess_el = guess + confirmed_emojis
+
             for (var i = 0; i < confirmed_emojis.length; i++) {
                 var cnf = confirmed_emojis[i]
                 if (guess.includes(cnf)) {
@@ -470,10 +466,66 @@ if (isset($_SESSION['username'])) {
                 }
             }
 
+            var final_ns = final
             final = [...new Set(final)]
             updateConfirmedPrediction(final)
 
+            var confirmBLIP = []
+            var confirmedBLIP = []
+            if (img) {
+                if (img.alt) {
+                    console.log("CONFIRM BLIP: " + img.alt)
+                    confirmBLIP = emojisFromCaption(img.alt)
+
+                    for (var i = 0; i < confirmBLIP.length; i++) {
+                        var blipemo = confirmBLIP[i]
+                        
+                        for (var ii = 0; ii < final_ns.length; ii++) {
+                            var finalemo = final_ns[ii]
+
+                            if (blipemo === finalemo) {
+                                confirmedBLIP.push(blipemo)
+                            }
+                        }
+                    }
+
+                    console.log("CONFIRMED BLIP")
+                    console.log(confirmBLIP)
+                    console.log(final_ns)
+                    //console.log(confirmedBLIP)
+
+                    pred_capt_el = document.getElementById("predict-caption")
+                    pred_capt_el.innerHTML = pred_capt_el.innerHTML + " [" + confirmedBLIP.length + "]" 
+                }
+
+            }
+
+
             return final
+        }
+
+        function captionMatchesCaption(img) {
+          var capt_A = img.alt
+          var capt_B = img.title
+
+          var ret = []
+
+          if (capt_A && capt_B) {
+            var arrA = capt_A.split(" ")
+            var arrB = capt_B.split(" ")
+
+            for (var i = 0; i < arrA.length; i++) {
+              var caption_A = arrA[i]
+              for (var ii =0; i < arrB.length; ii++) {
+                var caption_B = arrB[ii]
+                if (caption_A == caption_B) {
+                  ret.push(caption_A)
+                }
+              }
+            }
+          }
+
+          return ret
         }
 
         function splitIntoWordsAndAppend(obj, object_tags) {
@@ -483,7 +535,7 @@ if (isset($_SESSION['username'])) {
                 for (var i = 0; i < aObj.length; i++) {
                     var word = aObj[i]
                     if (object_tags) {
-                        ret.push(word)
+                        ret.push(pluralize.singular(word))
                     }
                 }
             }
@@ -494,12 +546,11 @@ if (isset($_SESSION['username'])) {
             var emojis_from_caption = []
 
             var aCaption = caption.split(" ")
-            for (var i = 0; i < aCaption.lenth; i++) {
+            for (var i = 0; i < aCaption.length; i++) {
                 var word = aCaption[i]
-                var emoji = findEmoji(word)
-                
+                var emoji = findEmoji(pluralize.singular(word))
                 if (emoji) {
-                    emojis_from_caption.push(emoji)                    
+                    emojis_from_caption.push(emoji)
                 }
             }
 
@@ -527,13 +578,20 @@ if (isset($_SESSION['username'])) {
                 "children", 
                 "women", 
                 "men",
-                "wig"
+                "wig",
+                "player",
+                "character",
+                "girls",
+                "kids",
+                "guys",
+                "student" 
             ]
 
             for (var i = 0; i < person_tags.length; i++) {
                 var person_tag = person_tags[i]
                 //console.log("EVAL: " + tags + " vs " + person_tag + " = " + (tags.includes(person_tag)))
 
+/*
                 var aTags = tags.split(" ")
                 for (var ii = 0; ii < aTags.length; ii++) {
                     var tag = aTags[ii]
@@ -543,9 +601,9 @@ if (isset($_SESSION['username'])) {
 
                     }
                 }
-
+*/
                 if (tags.includes(person_tag)) {
-                    // person = true
+                    person = true
                 }
             }
 
@@ -566,7 +624,7 @@ if (isset($_SESSION['username'])) {
             var faces = false
             
             if ((typeof img) == "string") {
-                img = document.getElementById(img)
+                ifmg = document.getElementById(img)
             }
             
             if (img) {
@@ -689,15 +747,19 @@ if (isset($_SESSION['username'])) {
                         }
 
                         // get age and gender predictions from captions
-                        if (cls.includes("caption_")) {
-                            var tmp = cls.replace("caption_","")
-                            var aTmp = tmp.split("-")
-                            var content = aTmp[0]
+                        if (cls.includes("BLIP")) {
+                            var cls_clean = cls.replace("BLIP-","").replace(/-/g," ")
+                            updateCaption(cls)
 
-                            var ta_textarea = document.getElementById("guess")
-                            var ta_val = ta_textarea.innerHTML                            
                         }
-                        
+
+                        // get age and gender predictions from captions
+                        if (cls.includes("YOLO")) {
+                            yolo = document.getElementById("yolo")
+                            yolo.innerHTML = cls.replace("YOLO-","").replace(/-/g," ")
+                            //updateCaption(cls)
+                        }
+
                         if (cls.includes("faces_")) {
                             var tmp = parseInt(cls.replace("faces_",""))
                             //var aTmp = tmp.split("_")
@@ -873,11 +935,12 @@ if (isset($_SESSION['username'])) {
 
                 // show prediction
                 let aTA = [...new Set(predict)]
+                
                 let aCOL = [...new Set(colors)]
                 let aGRAY = [...new Set(grays)]
                 let aSEARCH = [...new Set(search_tags)]
 
-                var aEmojis = getEmojisFromTags(img.id, aTA)
+                var aEmojis = getEmojisFromTags(img.id, predict)
 
                 var ret = {}
                 ret.emojis = aEmojis.sort()
@@ -890,6 +953,37 @@ if (isset($_SESSION['username'])) {
  
                 return ret
             }
+        }
+
+        function updateCaption(cls) {
+            if (cls) {
+            var tmp = cls.replace("BLIP-","")
+            var aTmp = tmp.split("-")
+            var content = aTmp[0]
+
+            var ta_textarea = document.getElementById("guess")
+            var ta_val = ta_textarea.innerHTML
+
+            var predcapt_el = document.getElementById("predict-caption")
+            //console.log("setting caption element to: " + caption)
+
+            // Match caption to caption
+            //var caption_matches = captionMatchesCaption(img)
+            //console.log("CAPTION MATCH")
+            //console.log(caption_matches)
+
+            var first_caption = tmp.replace(/-/g," ")
+            //var second_caption = caption
+
+            //predcapt_el.innerHTML = '<p class="first-caption">A <input type="checkbox" name="caption" id="caption-A" value="A"> <label for="caption-A">' + first_caption + '</label></p><p class="second-caption">B <input type="checkbox" name="caption" id="caption-B" value="B"> <label for="caption-B">' + second_caption + '</label></p>'
+
+            if (first_caption) {
+                // console.log("CLS: " + cls)
+                predcapt_el.innerHTML = '<p class="first-caption"><label for="caption-A">' + first_caption + '</label></p>'
+            } else {
+                predcapt_el.innerHTML = ''
+            }
+          }
         }
 
         var lastconf = ""
@@ -922,8 +1016,8 @@ if (isset($_SESSION['username'])) {
             }
 
             // create a unique set
-            let ret = [...new Set(emoji_output)]
-
+            //let ret = [...new Set(emoji_output)]
+            ret = emoji_output
             return ret
         }
 
@@ -1103,6 +1197,8 @@ if (isset($_SESSION['username'])) {
                         //cocoBot(which)
                         //ocrBot(which)
 
+                        BLIPworker(which)
+                        YOLOworker(which)
                         CAPTIONworker(which)
                         SNAILworker(which)
                         FACEworker(which)
@@ -1376,6 +1472,12 @@ if (isset($_SESSION['username'])) {
 
         function skipCurrentImage() {
             var img = getCurrentImage()
+
+var yolo = document.getElementById('yolo')
+yolo.innerHTML = ""
+
+            var pc = document.getElementById('predict-caption')
+            pc.innerHTML = ""
 
             if (img) {
                 console.log("Skip image: " + img)
@@ -1921,8 +2023,8 @@ if (isset($_SESSION['username'])) {
                 //model.image_data = encodeURI(bin.innerHTML)
                 model.binary_image_data = btoa(encodeURI(bin.innerHTML))
 
-                user.name = session.name // replace later
-                user.email = session.email
+                user.name = "local" //session.name // replace later
+                user.email = "local" //session.email
 
                 var tmp = buildImageHTML(which)
                 file.name = which
@@ -2104,7 +2206,7 @@ if (isset($_SESSION['username'])) {
                 var modelTags =  [...new Set(tags)]
                 model.tags = modelTags
                 
-                model.caption = alt // extracted from the caption
+                model.caption = alt.replace("caption-","").replace("caption_") // extracted from the caption
 
                 if (model != lastDM) {
                     // don't repeat 
@@ -2135,10 +2237,11 @@ if (isset($_SESSION['username'])) {
                 METADATAworker(which)
             }, 50)
 
+            var preds
             loginTimer = setInterval(function() {
                 if (windowModal.style.display != "none") {
                     // only refresh while modal is showing
-                    var preds = updatePrediction(which)
+                    preds = updatePrediction(which)
                 }
 
                 var login_predictions = document.getElementById("login_predictions")
@@ -2189,7 +2292,9 @@ if (isset($_SESSION['username'])) {
   </head>
   <body id="page">
 
-    <?PHP if ($_GET["tn"]) { ?>
+    <?PHP 
+    if (isset($_GET["tn"])) {
+    ?>
     <div id="modal" class="loading">
         <div class="disclaimer">            
             <h2 id="welcome_back" class="center"></h2>
@@ -2242,9 +2347,12 @@ if (isset($_SESSION['username'])) {
     <div id="predict">
         <!--<h2>Predictions</h2>-->
         <input id="confirmed" readonly>
-        <div id="flipped"></div>
+        <div id="predict-caption"></div>
         <div id="mask"></div>
-        <div id="guess">LOADING</div>
+        <div id="guess"></div>
+        <div id="guess-final"></div>
+        <div id="guess-from-caption"></div>
+        <div id="yolo"></div>
     </div>
 
     <div id="colors"></div>
@@ -2261,12 +2369,12 @@ if (isset($_SESSION['username'])) {
     
     <nav id="navigation">
         <a id="back" href="javascript: reviewLastImage()"><span>Back</span></a>
-        <a id="next" href="javascript: skipCurrentImage()"><span>Skip</span></a>
+        <a id="next" href="javascript: skipCurrentImage()"><span>Next</span></a>
     </nav>
 
     <nav id="skip">
         <a id="dislike" href="javascript: dislikeCurrentImage()"><span>Dislike</span></a>
-        <a id="hot" href="javascript: superlikeCurrentImage()"><span>Super Like</span></a>
+        <a id="hot" href="javascript: superlikeCurrentImage()"><span>Superlike</span></a>
         <a id="like" href="javascript: likeCurrentImage()"><span>Like</span></a>
     </nav>
 
@@ -2296,6 +2404,22 @@ if (isset($_SESSION['username'])) {
                 //event.preventDefault()
             }, false)
         })
+
+        document.onkeydown = function (event) {
+            switch (event.keyCode) {
+                case 37:
+                    break;
+                case 38:
+                    // console.log("Up key is pressed.");
+                    break;
+                case 39:
+                    //skipCurrentImage()
+                    break;
+                case 40:
+                    // console.log("Down key is pressed.");
+                    break;
+            }
+        }
 
         function zoomImage(which, url) {
             // show modal
@@ -2447,7 +2571,6 @@ if (isset($_SESSION['username'])) {
 
     </script>
     <!-- required by coco and obj -->
-    <script src="bots/nsfw.js"></script>
     <script src="bots/prefs.js"></script>
     <script src="bots/prefs_color.js"></script>
     <script src="bots/prefs_meta.js"></script>
@@ -2458,6 +2581,8 @@ if (isset($_SESSION['username'])) {
     <!-- load bots individually (can be batched up) -->
     <script src="bots/snail.js"></script>
     <script src="bots/caption.js"></script>
+    <script src="bots/blip.js"></script>
+    <script src="bots/yolo.js"></script>
     <script src="bots/coco.js"></script>
     <script src="bots/color.js"></script>
     <script src="bots/faces.js"></script>
@@ -2479,9 +2604,9 @@ if (isset($_SESSION['username'])) {
 </html>
 
 <?PHP 
-
+/*
  } else {
     header("Location: /login");
  }
-
- ?>
+*/
+?>

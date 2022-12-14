@@ -36,6 +36,8 @@ const server = http.createServer((req, res) => {
   var ip_from_node = req.socket.remoteAddress
 
   var allowedList = process.env.ALLOWED
+
+  if (process.env.ALLOWED) {
   var aList = allowedList.split(",")
 
   var allowed = false
@@ -45,11 +47,14 @@ const server = http.createServer((req, res) => {
       allowed = true
     }
   }
+  } else {
+    allowed = true
+  }
 
   // only accept requests from known hosts
   if (allowed) {
     if (req.params.img) {
-      readOCR(req.params.img, res);
+      downloadImage(req.params.img, uuidv4(), req, res);
     }
   } else {
     // inform them politely of their ban
@@ -65,6 +70,23 @@ server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });
 
+async function downloadImage(url, filepath, req, res) {
+axios.get(encodeURI(url), {responseType: "stream"} )
+  .then(response => {
+
+  filepath = "./tmp/" + filepath;
+  response.data.pipe(fs.createWriteStream(filepath))
+    .on('error', () => {
+    console.log("error")
+    // log error and process
+    })
+    .on('finish', () => {
+      console.log("Image downloaded")
+      readOCR(filepath, res)
+    });
+  });
+}
+
 
 const config = {
   lang: "eng",
@@ -72,7 +94,10 @@ const config = {
   psm: 3,
 }
 
+
 function readOCR(img, res) {
+console.log(img)
+
   tesseract
     .recognize(img, config)
     .then((text) => {
@@ -80,6 +105,7 @@ function readOCR(img, res) {
       sendData(text, res)
     })
     .catch((error) => {
+console.log("ERROR")
       console.log(error.message)
     })
 }

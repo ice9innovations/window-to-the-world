@@ -34,10 +34,11 @@ axios.get(encodeURI(url), {responseType: "stream"} )
   filepath = "./tmp/" + filepath;
   response.data.pipe(fs.createWriteStream(filepath))
     .on('error', () => {
-    console.log(error)
+    console.log("error")
     // log error and process 
     })
     .on('finish', () => {
+      console.log("Image downloaded")
       callName(req, res, filepath)
     });
   });
@@ -69,7 +70,7 @@ app.post('/upload',function(req,res){
     });
 });
 
-var server = app.listen(3030, function() {
+var server = app.listen(port, function() {
     console.log('Listening on port %d', server.address().port);
 });
 
@@ -87,9 +88,11 @@ app.get('/caption', function(req, res) {
   console.log(req.params.img);
 
   var ip_from_node = req.ip
-  console.log("IP address: " + ip_from_node)
+  //console.log("IP address: " + ip_from_node)
 
   var allowedList = process.env.ALLOWED
+
+  if (process.env.ALLOWED) {
   var aList = allowedList.split(",")
 
   var allowed = false
@@ -99,17 +102,23 @@ app.get('/caption', function(req, res) {
       allowed = true
     }
   }
+  } else {
+    allowed = true
+  }
+
+allowed = true
 
   // only accept requests from known hosts
   if (allowed) {
     if (req.params.img) {
+      console.log("Downloading image: " + req.params.img)
       downloadImage(req.params.img, uuidv4(), req, res);
     } else {
       var err = {}
       err.message = "Image parameter is blank"
 
       console.log(err)
-      res.end(JSON.stringify(err))
+      res.write(JSON.stringify(err))
     }
   } else {
     // inform them politely of their ban
@@ -130,6 +139,8 @@ function callName(req, res, file="") {
 
     var projectPath = __dirname;  // Users/yujin/Desktop/nodePytonWithNN
     var imagePath = __dirname + "/public/img/imagedata"; // Users/yujin/Desktop/nodePytonWithNN/public/img/image.png
+
+//console.log("python3 ./Python_NN/app_image_caption.py " + projectPath.toString() + " " + imagePath.toString())
 
     if (file) {
       imagePath = file

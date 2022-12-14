@@ -8,7 +8,8 @@ from model import EncoderCNN, DecoderRNN
 from vocabulary import Vocabulary
 from helpers import *
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"
 root_path = sys.argv[1]
 image_path = sys.argv[2]
 
