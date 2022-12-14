@@ -19,3 +19,16 @@ https://window-to-the-world.org
 *  [Practice](./docs/practice.md)
 *  [References](./docs/references.md)
 *  [Installation Guide](./docs/install.md)
+
+## Examples
+
+<p>
+<img src="https://github.com/ice9innovations/window-to-the-world/blob/main/examples/coco/IMG_7478.jpeg?raw=true" width="32%">
+<img src="https://github.com/ice9innovations/window-to-the-world/blob/main/examples/coco/IMG_7485.jpeg?raw=true" width="32%">
+<img src="https://github.com/ice9innovations/window-to-the-world/blob/main/examples/coco/IMG_7486.jpeg?raw=true" width="32%">
+</p>
+p>
+<img src="https://github.com/ice9innovations/window-to-the-world/blob/main/examples/coco/IMG_7487.jpeg?raw=true" width="32%">
+<img src="https://github.com/ice9innovations/window-to-the-world/blob/main/examples/coco/IMG_7488.jpeg?raw=true" width="32%">
+<img src="https://github.com/ice9innovations/window-to-the-world/blob/main/examples/coco/IMG_7489.jpeg?raw=true" width="32%">
+</p>
