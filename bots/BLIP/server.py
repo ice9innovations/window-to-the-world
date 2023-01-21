@@ -21,11 +21,7 @@ image_size = 160
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 #model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
-
-model_url = '/home/sd/window-to-the-world/bots/BLIP.prod/model_base_14M.pth'
-model_url = '/home/sd/window-to-the-world/bots/BLIP.prod/model_large.pth'
-model_url = '/home/sd/window-to-the-world/bots/BLIP.prod/model_base_capfilt_large.pth'
-model_url = '/home/sd/window-to-the-world/bots/BLIP.prod/model_base.pth'
+model_url = './model_base.pth'
 
 model = blip_decoder(pretrained=model_url, image_size=image_size, vit='base')
 model.eval()
