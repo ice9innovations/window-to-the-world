@@ -251,27 +251,28 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         url = self.path
         parsed_url = urlparse(url)
         qs = parse_qs(parsed_url.query)
-        img = qs["img"]
-        img = img[0]
 
-        #print(img)
+        if (qs):
+            img = qs["img"]
+            img = img[0]
 
-        #sys.argv[1]
-        image = load_demo_image(img,image_size=image_size, device=device)
+            #print(img)
 
-        #print(opt)
-        #check_requirements(exclude=('pycocotools', 'thop'))
+            #sys.argv[1]
+            image = load_demo_image(img,image_size=image_size, device=device)
 
-        with torch.no_grad():
-            if opt.update:  # update all models (to fix SourceChangeWarning)
-                for opt.weights in ['yolov7.pt']:
+            #print(opt)
+            #check_requirements(exclude=('pycocotools', 'thop'))
+
+            with torch.no_grad():
+                if opt.update:  # update all models (to fix SourceChangeWarning)
+                    for opt.weights in ['yolov7.pt']:
+                        detect(img, self)
+                        strip_optimizer(opt.weights)
+                else:
                     detect(img, self)
-                    strip_optimizer(opt.weights)
-            else:
-                detect(img, self)
 
-
-        return 0 #http.server.SimpleHTTPRequestHandler.do_GET(self) #self
+            return 0 #http.server.SimpleHTTPRequestHandler.do_GET(self) #self
 
 
 Handler = MyHttpRequestHandler
