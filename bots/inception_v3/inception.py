@@ -57,7 +57,7 @@
 import numpy as np
 import tensorflow as tf
 import download
-from functools import cache
+from functools import lru_cache
 import os
 import sys
 
