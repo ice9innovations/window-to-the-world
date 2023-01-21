@@ -1,0 +1,11 @@
+[Unit]
+Description=Inception v3
+
+[Service]
+Type=simple
+User=sd
+WorkingDirectory=/home/sd/window-to-the-world/bots/inception_v3
+ExecStart=/home/sd/window-to-the-world/bots/inception_v3/inception.sh
+
+[Install]
+WantedBy=multiuser.target

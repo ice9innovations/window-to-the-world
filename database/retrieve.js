@@ -10,9 +10,12 @@ const port = process.env.PORT_RETRIEVE;
 
 var db_user = process.env.DB_USERNAME
 var db_password = process.env.DB_PASSWORD
+var db_url = process.env.DB_URL;
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
+//const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
+const uri = "mongodb://" + db_user + ":" + db_password + "@" + db_url + "/?retryWrites=true&w=majority"
+
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // get querystring parameters
@@ -50,6 +53,8 @@ const server = http.createServer((req, res) => {
   }
 
   // only accept requests from known hosts
+  var allowed = true // override
+
   if (allowed) {
     if (req.params.user) {
       retrieveFromDatabase(req.params.user, res);
@@ -73,14 +78,14 @@ async function getImage(client, usr, res) {
 
   var image = {}
   var user = {}
-  user.name = "demo"
+  user.name = usr
 
-  image.user = user
+  image.user = usr
   var query = {image};
 
-  console.log(query)
+  if (usr == "") { usr = "local" }
 
-  dbo.collection("images").find({ "user.name": "demo"}).sort({timestamp: -1}).limit(1).toArray(function(err, result) {
+  dbo.collection("images").find({"user.name": usr}).sort({timestamp: -1}).limit(1).toArray(function(err, result) {
     if (err) throw err;
     //console.log(result)
     deleteImg(client, result, res)

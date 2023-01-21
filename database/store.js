@@ -11,9 +11,12 @@ const port = process.env.PORT_STORE
 
 var db_user = process.env.DB_USERNAME
 var db_password = process.env.DB_PASSWORD
+var db_url = process.env.DB_URL // huhgg.gcp.mongodb.net
 
 const { MongoClient, ServerApiVersion } = require('mongodb')
-const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
+//const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
+const uri = "mongodb://" + db_user + ":" + db_password + "@" + db_url + "/?retryWrites=true&w=majority"
+
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 parseMultipart = function(request) {
@@ -73,17 +76,17 @@ const server = http.createServer((req, res) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
         res.writeHead(err.httpCode || 400, { 'Content-Type': 'text/plain' });
-        res.end(String(err));
+        res.write(String(err));
         return;
       }
 
       console.log(fields);
 
       // this is the only part of this code that actually does anything
-      console.log(fields.img);
+      //console.log(fields.img);
 
       var ip_from_node = req.socket.remoteAddress
-
+/*
       var allowedList = process.env.ALLOWED
       var aList = allowedList.split(",")
 
@@ -97,22 +100,23 @@ const server = http.createServer((req, res) => {
 
       // only accept requests from known hosts
       if (allowed) {
-
+*/
         if (fields.img) {
           saveToDatabase(fields.img);
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ fields, files }, null, 2));
-      } else {
+  //    } else {
         // inform them politely of their ban
-        var err = {}
-        err.message = "IP address not on allowed list"
+  //      var err = {}
+  //      err.message = "IP address not on allowed list"
 
-        console.log(err)
-        res.end(JSON.stringify(err))
-      }
+  //      console.log(err)
+  //      res.write(JSON.stringify(err))
+  //    }
     });
+
 
     collectRequestData(req, result => {
 
@@ -150,7 +154,7 @@ var post = parse(body)//
 
 
     res.writeHead(200)
-    res.end(body)
+    res.write(body)
   })
 
 //    downloadImage(req.params.img, uuidv4(), res);
@@ -220,6 +224,9 @@ async function saveToDatabase(img){
      * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
      * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
      */
+
+console.log("save to database")
+console.log(img)
 
     var data = {}
     try {

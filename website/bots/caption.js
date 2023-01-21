@@ -3,7 +3,7 @@ function CAPTIONworker(which) {
     var w
     if (typeof(Worker) !== "undefined") {
         if (typeof(w) == "undefined") {
-            console.log('Starting snail worker for: ' + which)
+            console.log('Starting CaptionNN worker for: ' + which)
             w = new Worker("/bots/caption_worker.js")
 
             var el = buildImageHTML(which.replace("img-",""))
@@ -16,12 +16,12 @@ function CAPTIONworker(which) {
                     stopWorker(w)
                 }
             } else {
-                console.log("Stopping caption worker: missing HTML element")
+                console.log("Stopping CaptionNN worker: missing HTML element")
                 stopWorker(w)
             }
         }
         w.onmessage = function(event) {
-            //console.log("OCR Worker message received")
+            console.log("CaptionNN worker message received")
             //console.log(event.data)
             var caption = event.data
             //var tagStr = tags.join(" ")
@@ -36,13 +36,13 @@ function CAPTIONworker(which) {
                         caption = caption.replace(/\"/g,"")
                         caption = caption.replace(/\'/g,"")
 
-                        console.log("Caption Worker adding caption: '" + capt + "'")
+                        console.log("CaptionNN Worker adding caption: '" + capt + "'")
 
-                        el.alt = capt
-                        el.title = capt // el.className
+                        //el.alt = capt
+                        //el.title = capt // el.className
 
                         var capt2 = "caption_" + caption.replace(/ /g,"-")
-                        console.log("Caption Worker tagging image with: " + capt2)
+                        console.log("CaptionNN Worker tagging image with: " + capt2)
 
                         tagImage(which, capt2)
 

@@ -1,0 +1,14 @@
+[Unit]
+Description=BLIP Caption Service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=0
+WorkingDirectory=/home/sd/window-to-the-world/bots/BLIP/
+User=sd
+ExecStart=python3 /home/sd/window-to-the-world/bots/BLIP/server.py
+
+[Install]
+WantedBy=multi-user.target

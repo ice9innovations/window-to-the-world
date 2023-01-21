@@ -1,7 +1,7 @@
 onmessage = function(event) {
     // the passed-in data is available via e.data
-    console.log("Classify Worker message received: " + event.data)
-    classifyBot(event.data)
+    //console.log("Classify Worker message received: " + event.data)
+    //classifyBot(event.data)
 }
 
 function classifyBot(tagStr) {

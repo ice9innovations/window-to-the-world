@@ -28,26 +28,40 @@ var url_params
 const server = http.createServer((req, res) => {
   req.params=params(req)
   url_params = req.params
-  //console.log(req.params)
+  console.log(req.params.num)
 
-var f = {}
-fs.readdir("/var/www/html/images/mscoco/", (err, files) => {
+    var f = {}
+    fs.readdir("/var/www/html/images/mscoco/", (err, files) => {
+
+    var file_count = 1
+    if (req.params.num) {
+
+        file_count = parseInt(req.params.num)
+    }
 
     //console.log(err, files)
 
     let max = files.length - 1;
     let min = 0;
 
-    let index = Math.round(Math.random() * (max - min) + min);
-    let file = files[index];
+    var ret = []
+    var index, file
+    for (var i = 0; i < file_count; i++) {
 
-    console.log("Random file is", file);
+        var index = Math.round(Math.random() * (max - min) + min);
+        file = files[index];
 
-    var dir = "/images/mscoco/"
-    f.file = dir + file
-    f.tn = dir + "tn/thumb." + file
+        var dir = "/images/mscoco/"
+        f.file = file
+        f.tn = "thumb." + file
+
+        console.log("Random file is", file)
+        ret.push(f)
+        f = {}
+    }
+
     res.setHeader('Content-Type', 'application/json')
-    res.end(JSON.stringify(f))
+    res.end(JSON.stringify(ret))
 });
 
 

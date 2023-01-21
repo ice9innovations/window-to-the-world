@@ -557,9 +557,9 @@
 
             #navigation #next::before,
             #navigation #back::before,
-            #skip #dislike::before,
-            #skip #hot::before,
-            #skip #like::before {
+            #preference #dislike::before,
+            #preference #hot::before,
+            #preference #like::before {
                 -webkit-font-smoothing: antialiased;
                 text-rendering: auto;
 
@@ -575,7 +575,7 @@
                 content: "\f104";
             }
 
-            #skip {
+            #preference {
                 text-align: center;
                 
                 position: absolute;
@@ -586,7 +586,7 @@
                 z-index: 9;
             }
 
-                #skip A {
+                #preference A {
                     display: inline-block;
 
                     color: #EEE;
@@ -599,11 +599,11 @@
                     margin-right: 10px;
                 }
 
-                #skip A SPAN { display: none; }
+                #preference A SPAN { display: none; }
 
-                #skip #dislike::before,
-                #skip #hot::before,
-                #skip #like::before {
+                #preference #dislike::before,
+                #preference #hot::before,
+                #preference #like::before {
                     display: block;
                     font-size: 32px;
                     text-indent: 0;
@@ -611,22 +611,37 @@
                     margin-top: 111px;
                 }
 
-                #skip #like::before {
+                #preference #like::before {
                     content: "\1F44D";
                     content: "\2b"; 
                 }
 
-                #skip #hot::before {
+                #preference #hot::before {
                     color: #FFD700;
+                    color: #D00;
                     font-size: 36px;
-                    content: "\2B50"; /* 2764, 1F525 */
+                    font-weight: 600;
+                    content: "\f004"; /* 2764, 1F525, 2B50 */
                 }
 
-                #skip #dislike::before {
+                #preference #dislike::before {
                     content: "\1F44E";
                     content: "\f068"; 
                 }
 
+                .saved {
+                    position: absolute;
+                    width: 75px;
+                    z-index: 9;
+                }
+
+                    .saved A {
+                        border: 0;
+                    }
+
+                    .saved IMG {
+                        border: 0;
+                    }
         .nuke {
             display: none;
             position: fixed;
@@ -867,7 +882,7 @@
                 top: 315px;
             }
 
-            #skip {
+            #preference {
                 top: 480px;
                 padding-left: 7px;
             }

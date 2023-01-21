@@ -1,12 +1,12 @@
 onmessage = function(event) {
     // the passed-in data is available via e.data
-    console.log("Preference Worker message received")
+    //console.log("Preference Worker message received")
     var e = event.data
 
     var user = e.user
     var tags = e.tags
 
-    prefBot(user, tags)
+    //prefBot(user, tags)
 }
 
 function prefBot(user, emoji_tags) {

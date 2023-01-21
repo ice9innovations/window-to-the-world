@@ -38,7 +38,7 @@ function BLIPworker(which) {
 
                         console.log("BLIP Worker adding caption: '" + capt + "'")
 
-                        el.alt = capt // el.className
+                        // el.title = capt // el.className
 
                         var capt2 = "BLIP" + caption.replace(/ /g,"-").replace("caption-","")
                         console.log("BLIP Worker tagging image with: " + capt2)
