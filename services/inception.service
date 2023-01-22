@@ -1,11 +1,14 @@
 [Unit]
-Description=Inception v3
+Description=Inception v3 Caption Service
+After=network.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-User=sd
-WorkingDirectory=/home/sd/window-to-the-world/bots/inception_v3
-ExecStart=/home/sd/window-to-the-world/bots/inception_v3/inception.sh
+Restart=0
+WorkingDirectory=/home/ubuntu/inception_v3/
+User=ubuntu
+ExecStart=python3 /home/ubuntu/inception_v3/server.py
 
 [Install]
-WantedBy=multiuser.target
+WantedBy=multi-user.target

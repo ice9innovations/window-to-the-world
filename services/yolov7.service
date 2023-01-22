@@ -6,9 +6,9 @@ StartLimitIntervalSec=0
 [Service]
 Type=simple
 Restart=0
-User=sd
-WorkingDirectory=/home/sd/yolov7
-ExecStart=python3 /home/sd/yolov7/detect-server.py
+WorkingDirectory=/home/ubuntu/yolov7/
+User=ubuntu
+ExecStart=python3 /home/ubuntu/yolov7/detect-server.py
 
 [Install]
 WantedBy=multi-user.target

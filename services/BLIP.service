@@ -6,9 +6,9 @@ StartLimitIntervalSec=0
 [Service]
 Type=simple
 Restart=0
-WorkingDirectory=/home/sd/window-to-the-world/bots/BLIP/
-User=sd
-ExecStart=python3 /home/sd/window-to-the-world/bots/BLIP/server.py
+WorkingDirectory=/home/ubuntu/BLIP/
+User=ubuntu
+ExecStart=python3 /home/ubuntu/BLIP/server.py
 
 [Install]
 WantedBy=multi-user.target
