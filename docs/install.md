@@ -28,15 +28,11 @@ Installing Window to the World is complicated right now as we do not have a depl
 
 ### Install NodeJS and NPM
 
-<code>
-sudo apt install npm
-</code>
+<code>sudo apt install npm</code>
 
 ### Install PM2:
 
-<code>
-npm install pm2 -g 
-</code>
+<code>npm install pm2 -g</code>
 
 ### Install and Run the Bots
 
@@ -54,7 +50,11 @@ npm install pm2 -g
 
 <code>cd bots/caption</code>
 
+<code>mkdir tmp</code>
+
 <code>npm install</code>
+
+<code>pip install nltk</code>
 
 <code>pm2 start caption</code>
 
@@ -84,15 +84,107 @@ npm install pm2 -g
 
 #### Install the OpenCV Object Detector Bots
 
+##### Install OpenCV from Source #####
+
+Follow this guide: https://linuxhint.com/install-opencv-ubuntu/
+
+or use the following steps:
+
+1. Install gcc7
+
+<code>sudo apt install build-essential</code>
+
+<code>sudo apt -y install gcc-7 g++-7 gcc-8 g++-8 gcc-9 g++-9</code>
+
+<code>sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7</code>
+
+<code>sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 7</code>
+
+<code>sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8</code>
+
+<code>sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8</code>
+
+<code>sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9</code>
+
+<code>sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9</code>
+
+<code>sudo update-alternatives --config gcc</code>
+
+- Select gcc7
+
+<code>git clone https://github.com/opencv/opencv.git</code>
+  
+<code>mkdir -p build && cd build</code>
+  
+<code>cmake -D CMAKE_BUILD_TYPE=RELEASE \ 
+-D CMAKE_INSTALL_PREFIX=/usr/local \ 
+-D INSTALL_C_EXAMPLES=ON \ 
+-D INSTALL_PYTHON_EXAMPLES=ON \    
+-D OPENCV_GENERATE_PKGCONFIG=ON \ 
+-D OPENCV_EXTRA_MODULES_PATH=~/opencv/opencv_contrib/modules \ 
+-D BUILD_EXAMPLES=ON ..</code>
+
+<code>nproc</code>
+
+<code>make -j[number from nproc minus a couple]</code>
+
+<code>sudo make install</code>
+
+<code>sudo update-alternatives --config gcc</code>
+
+- Select gcc 9 or highest
+
+##### Install the NodeJS services #####
+
+Confirm that OpenCV is installed:
+
+<code>python3 -c "import cv2; print(cv2.__version__)"</code>
+
+Set an environment variable and install opencv4nodejs
+
+Download the model file
+
+<code>wget https://window-to-the-world.org/download/inception5h.zip</code>
+
+<code>wget https://window-to-the-world.org/download/models_VGGNet_coco_SSD_300x300.tar.gz</code>
+
+<code>unzip inception5h.zip</code>
+
+<code>tar -xvf models_VGGNet_coco_SSD_300x300.tar.gz</code>
+
+Create an environment file
+
+<code>nano .env</code>
+
+<code>HOSTNAME=127.0.0.1</code>
+
+<code>PORT_OBJECT=XXXX</code>
+
+<code>PORT_FACE2=XXXX</code>
+
+<code>PORT_FACES=XXXX</code>
+
+<code>PORT_MULTI=XXXX</code>
+
+Start the NodeJS Services
+
 <code>cd bots/opencv</code>
+
+<code>npm init</code>
+  
+<code>export OPENCV4NODEJS_DISABLE_AUTOBUILD=0</code>
+
+<code>npm install @u4/opencv4nodejs</code>
 
 <code>npm install</code>
 
-<code>pm2 start multi</code>
+<code>pm2 start object.js</code>
 
-<code>pm2 start object</code>
+<code>pm2 start multi.js</code>
 
-To install OpenCV for NodeJS manually, follow these instructions:
+<code>pm2 start faces.js</code>
+
+To install openCV4nodeJS manually, follow these instructions:
 
 https://github.com/justadudewhohacks/opencv4nodejs
 
@@ -106,11 +198,57 @@ Copy the .env file into each bot directory.
 
 <code>sudo nano .env</code>
 
-<code>
-HOSTNAME=""
+<code>HOSTNAME=""
 PORT=""
-ALLOWED="0.0.0.0,127.0.0.1"
-</code>
+ALLOWED="0.0.0.0,127.0.0.1"</code>
+
+#### Install BLIP ####
+
+<code>git clone https://github.com/salesforce/BLIP.git</code>
+
+<code>cd BLIP</code>
+
+<code>cp ~/window-to-the-world/bots/BLIP/server.py ./</code>
+
+<code>wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base.pth</code>
+
+<code>pip install timm</code>
+
+<code>pip install fairscale</code>
+
+<code>pip install transformers</code>
+
+<code>sudo nano /var/www/html/inception/index.php</code>
+
+#### Install Inception v3 ####
+
+<code>cp -r window-to-the-world/bots/inception_v3/ ~/</code>
+
+<code>pip install download</code>
+
+<code>pip install tensorflow</code>
+
+<code>./inception.sh</code>
+ 
+<code>sudo nano /var/www/html/inception/index.php</code>
+
+#### Install YOLO v3 ####
+
+<code>git clone https://github.com/WongKinYiu/yolov7p</code>
+
+<code>pip install opencv-pythonp</code>
+
+<code>pip install pandasp</code>
+
+<code>pip install seabornp</code>
+
+<code>pip install scipyp</code>
+
+cp ~/window-to-the-world/bots/yolov7/server.sh ./p</code>
+
+cp ~/window-to-the-world/bots/yolov7/detect-server.py ./p</code>
+
+sudo nano /var/www/html/yolo/index.php</code>
 
 ### Install the database bots
 
