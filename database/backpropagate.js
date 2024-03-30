@@ -7,8 +7,8 @@ const imageThumbnail = require('image-thumbnail')
 const http = require('http')
 const axios = require('axios')
 
-const hostname = process.env.HOSTNAME
-const port = process.env.PORT_BACKPROP
+const dotenv = require('dotenv')
+dotenv.config()
 
 var db_user = process.env.DB_USERNAME
 var db_password = process.env.DB_PASSWORD
@@ -16,6 +16,9 @@ var db_password = process.env.DB_PASSWORD
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+const hostname = '127.0.0.1'
+const port = 8888
 
 const webroot = "/var/www/html"
 const tn_dir = webroot + "/tn/" // destination

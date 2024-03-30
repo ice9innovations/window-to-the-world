@@ -163,6 +163,7 @@ function getEmojisFromTags(which, tags) {
 
 function findEmoji(keyword) {
     var ret = ""
+    console.log(emojis)
     if (emojis) {                
         for (var i = 0; i < emojis.length; i++) {
             var emu = emojis[i]
@@ -177,285 +178,6 @@ function findEmoji(keyword) {
     return ret
 }
 
-function captionConfirmPrediction(img, emojis_from_image, guessJSON) {
-    // even though this seems redundant, doing it the "correct"
-    // way kills performance, so don't do that
-
-    //console.log(emojis_from_image)
-
-    if (!(guessJSON)) {
-        guessJSON = {}
-    }
-
-    var confirmed = []
-    var confirmed_emojis = []
-
-    var caption_from_image = getCaptionFromTags(img)
-
-    caption = caption_from_image.caption
-    yolo7 = caption_from_image.YOLO
-    blip = caption_from_image.BLIP
-
-    if (img) {
-        var cn = ""
-        if (img.className) { cn = img.className }
-
-        image_tags = cn.split(" ")
-
-        // lookup emoji in emoji table
-        // loop entire emoji table
-        
-        // loop emoji tags from image
-        for (var i = 0; i < emojis_from_image.length; i++) {
-            var tmp = emojis_from_image[i]
-            
-            for (var ii = 0; ii < emojis.length; ii++) {
-                var e = emojis[ii]
-                var key = Object.keys(e)[0]
-                var val = e[key]
-
-                var e = JSON.stringify(e)
-
-                if (val == tmp) {
-                // emoji was found
-                    var txt = key.replace(/_/g," ")
-                    image_tags.push(txt)
-                }
-            }
-        }
-
-        if (caption || blip || yolo7) {
-            
-            //combined_caption = img.alt + " " + img.title + " " + yolo7// append title to alt to compare both 
-            combined_caption = caption + " " + blip + " " + yolo7
-
-            var object_tags = []
-            
-            var emojis_from_alt = emojisFromCaption(caption)
-            var emojis_from_title = emojisFromCaption(blip)
-            var emojis_from_yolo= emojisFromCaption(yolo7)
-
-            var emojis_from_caption = []
-            emojis_from_caption = emojis_from_caption.concat(emojis_from_alt)
-            emojis_from_caption = emojis_from_caption.concat(emojis_from_title)
-            emojis_from_caption = emojis_from_caption.concat(emojis_from_yolo)
-            
-            //console.log("EMOJIS FROM CAPTION")
-            //console.log(emojis_from_caption)
-
-            var final_el = document.getElementById("guess-final") // first
-            var guess_el = document.getElementById("guess") // guessJSON.all
-            var cpt_el = document.getElementById("guess-from-caption") // second?
-
-            // what the actual fuck
-            //var cpt_val = (guess_el.innerHTML + " " + emojis_from_caption.join(" ")).replace(","," ")
-            var objs = ""
-            if (guessJSON) {
-                if (guessJSON.objects) {
-                    objs = guessJSON.objects.join(" ")
-                }
-            }
-            var cpt_val = (objs + " " + emojis_from_caption.join(" ")).replace(","," ")
-
-            acpt = cpt_val.split(" ")
-            acpt = acpt.sort()
-
-            //cpt_el.innerHTML = acpt.join(" ")
-
-            var count = {};
-            acpt.forEach(element => {
-                count[element] = (count[element] || 0) + 1;
-            }) 
-
-
-            var first_place = ""
-            var second_place = ""
-            for (var emo in count) {
-                cnt = count[emo]
-                if (cnt != 1) {
-                    if (emo) {
-                        first_place += emo + " "
-                    }
-                } else {
-                    if (emo) {
-                        second_place += emo + " "                                
-                    }
-                }
-                //console.log(emo + ": " + cnt)
-            }
-
-            //final_el.innerHTML = first_place
-            //cpt_el.innerHTML = second_place
-
-            // collect object and multi tags from the image
-            for (var i = 0; i < image_tags.length; i++) {
-                var t = image_tags[i]
-
-                if (t.includes("object") || (t.includes("multi")) || (t.includes("inception"))) {
-                    t = t.replace("object_","").replace("multi_","").replace("inception_")
-
-                    // drop probability
-                    var tA = t.split("-")
-                    var obj = tA[0]
-
-                    // split into words and append
-                    // must be a function or it bogs down
-                    object_tags = splitIntoWordsAndAppend(obj, object_tags)
-
-                    //object_tags.push(obj.replace(/_/g," "))
-                }
-                
-                if (t.includes("faces")) {
-                    t = t.replace("faces_","")
-                    var val = parseInt(t)
-
-                    if (val > 0) {
-                        object_tags.push("person")
-                    }
-                }
-                
-            }
-
-            // check for specific objects
-
-            // check for people        
-            var person_from_caption = false
-            var person_from_tags = false
-            
-            person_from_caption = captionConfirmPerson(combined_caption)
-            person_from_tags = captionConfirmPerson(object_tags.join(" "))
-
-            if (person_from_caption && person_from_tags) {
-                confirmed.push("person")
-                confirmed_emojis.push("🧑")
-                tagImage(img.id, "confirmed_person")
-            } 
-
-            // check for matching words
-            for (var i = 0; i < object_tags.length; i++) {
-                var tag = object_tags[i]
-                if (combined_caption.includes(tag)) {
-                    confirmed.push(tag)
-
-                    var emo = findEmoji(tag.replace(/ /g,"_"))
-
-                    if (emo) {
-                        confirmed_emojis.push(emo)
-                    }
-
-                    //tagImage(img.id, "confirmed_" + tag)
-                }
-            }
-                                
-        }
-    }
-    
-    // remove duplicates
-    confirmed_duplicates = confirmed_emojis
-    confirmed = [...new Set(confirmed)]
-    //confirmed_emojis = [...new Set(confirmed_emojis)]
-    //emojis_from_caption = [...new Set(confirmed_emojis)]
-    
-
-    // corroborate final list
-    // var guess_el = document.getElementById("guess")
-    // var guess = guess_el.innerHTML
-
-    // from JSON instead o fHTML element
-    var guess = []
-    if (guessJSON) {
-        if (guessJSON.objects) {
-            guess = guessJSON.objects.join(" ")
-        }
-    }
-    if ((!(guess)) || (guess === "undefined")) { guess = "" }
-
-    var final = []
-    
-    //console.log("CONFIRMED")
-    //console.log(confirmed_emojis)
-
-    //guess_el.innerHTML = ""
-    //guess_el = guess + confirmed_emojis
-
-    for (var i = 0; i < confirmed_emojis.length; i++) {
-        var cnf = confirmed_emojis[i]
-
-        var tmp = " "
-
-        if (guess) {
-            tmp = guess
-        }
-
-        if (tmp.includes(cnf)) {
-            final.push(cnf)
-
-            var cls = "confirmed_" + cnf
-
-            if (!(img.className.includes(cls))) {
-                // only add once
-                console.log("Tagging image " + img.id + " with confirmed_" + cnf)
-                tagImage(img.id, cls)
-            } 
-        }
-    }
-
-    var final_ns = final
-    final = [...new Set(final)]
-
-    var confirmBLIP = []
-    var confirmedBLIP = []
-    if (img) {
-        if (blip) {
-            //console.log("CONFIRM BLIP: " + img.alt)
-            //confirmBLIP = emojisFromCaption(img.alt)
-
-            for (var i = 0; i < confirmBLIP.length; i++) {
-                var blipemo = confirmBLIP[i]
-                
-                for (var ii = 0; ii < final_ns.length; ii++) {
-                    var finalemo = final_ns[ii]
-
-                    if (blipemo === finalemo) {
-                        confirmedBLIP.push(blipemo)
-                    }
-                }
-            }
-
-            //console.log("CONFIRMED BLIP")
-            //console.log(confirmBLIP)
-            //console.log(final_ns)
-            //console.log(confirmedBLIP)
-
-            //pred_capt_el = document.getElementById("predict-caption")
-            //pred_capt_el.innerHTML = pred_capt_el.innerHTML + " [" + confirmedBLIP.length + "]" 
-        }
-
-    }
-
-
-    // build JSON for output
-
-    var all = (guess + confirmed_emojis).split(",")
-    all = all.concat(emojis_from_caption)
-
-    guessJSON.all = all
-
-    if (first_place) {
-        guessJSON.first = first_place.split(" ")
-    } else {
-        guessJSON.first = []
-    }
-
-    if (first_place) {
-        guessJSON.second = second_place.split(" ")
-    } else {
-        guessJSON.second = []
-    }
-
-    return guessJSON
-}
-
 function cleanArray(actual) {
     var newArray = new Array()
     for (var i = 0; i < actual.length; i++) {
@@ -466,637 +188,1258 @@ function cleanArray(actual) {
     return newArray
 }
 
-function buildDataModel(which) {
-    console.log("Build data model: ")
-
-    var param = which // why though?
-    var jqStr = which // "#img-" + param.id
-    
-    var tmp = document.getElementById("img-" + which)
-    if (!(tmp)) {
-        tmp = document.getElementById("ad-" + which)
-    }
-
-    var img = tmp //[0]
-
-    var caption_from_image = getCaptionFromTags(which)
-
-    //console.log(img)
-    if (img) {
-        var clsList = img.classList
-
-        var model = {}
-
-        var avm = {}
-        var del = {}
-        var user = {}
-        var file = {}
-        var meta = {}
-        var obj = {}
-        var multi = {}
-        var inception = {}
-        var facecnt = 0
-        var color = {}
-        var palette = []
-        var grayscale = []
-        var txt = []
-        var emojis = []
-        var predict = []
-        var actions = []
-        var tags = []
-        var caption = []
-
-        // get predictions in json format
-        var preds = updatePrediction(img)
-        if (preds) {
-            // get emojis from predictions
-            emos = preds.emojis
-            
-            if (emos) {
-                for (var i = 0; i < emos.length; i++) {
-                    var tmp = emos[i]
-                    var emo = tmp.codePointAt(0).toString(16)
-                    emojis.push(emo)
-                }
-            }
-
-            // final predicted tags
-            if (preds.tags) {
-                tags = preds.tags
-            }
-        }
-
-        model.guid = uuidv4()
-        model.timestamp = new Date().getTime() / 1000
-        model.ad = false
-
-        console.log('build binary')
-        var bin = document.getElementById(which) //param.id
-        //console.log(bin.addClass("saved"))
-
-        //model.image_data = encodeURI(bin.innerHTML)
-        model.binary_image_data = btoa(encodeURI(bin.innerHTML))
-
-        user.name = "local" //session.name // replace later
-        user.email = "local" //session.email
-
-        var tmp = buildImageHTML(which)
-        file.name = which
-        file.url = tmp.url
-        file.thumbnail = tmp.thumbnail
-
-        // get position and timestamp from link 
-        var anchor = document.getElementById(which.replace("img-","").replace("ad-",""))
-        
-        del.action = false // default to false
-        //var anchorCls = anchor.className.split(/\s+/)
-        for (var i = 0; i < anchor.classList.length; i++) {
-            var cls = anchor.classList[i]
-
-            console.log(cls)
-            
-            if (cls.includes("advert")) {
-                model.ad = true
-            }
-
-            if (cls.includes("pos-")) {
-                pos = cls.replace("pos-", "")
-                del.position = pos
-            }
-
-            if (cls.includes("timestamp-")) {
-                pos = cls.replace("timestamp-", "")
-                del.time = pos
-            }
-            
-            if (cls.includes("user_deleted")) {
-                del.action = true
-            } 
-
-        }
-
-        for (var i = 0; i < clsList.length; i++) {
-            var cls = clsList[i]
-            var tmpCat = cls.split("_")
-
-            var category = tmpCat[0]                    
-            var cat_val = cls.replace(key, "") // replace the key
-
-            var keyval = cat_val.split("-")
-            var key = keyval[0]
-            var val = keyval[1]
-
-            //console.log("Category: " + category)
-            switch (category) {
-                case "meta": 
-                    if (key && val) {
-                        var tmpKey = key
-                        tmpKey = tmpKey.replace("meta_","")
-                        
-                        meta[tmpKey] = val
-                    }
-                    break
-                case "color": 
-                    if (key && val) {
-                        var tmpKey = key
-                        tmpKey = tmpKey.replace("color_","")
-
-                        switch (tmpKey) {
-                            case "palette":
-                                palette.push(val)
-                                break
-                            case "grayscale":
-                                grayscale.push(val)
-                                break
-                            default:
-                                color[tmpKey] = val
-                                break
-                        }
-                    }
-                    break
-                case "avm": 
-                    if (key && val) {
-                        var tmpKey = key
-                        tmpKey = tmpKey.replace("avm_","")
-
-                        avm[tmpKey] = parseInt(val) / 100 // probability
-                    }
-                    break
-                case "object": 
-                    if (key && val) {
-                        var tmpKey = key
-                        tmpKey = tmpKey.replace("object_","")
-
-                        obj[tmpKey] = parseInt(val)
-                    }
-                    break
-                case "multi": 
-                    if (key && val) {
-                        var tmpKey = key
-                        tmpKey = tmpKey.replace("multi_","")
-
-                        multi[tmpKey] = parseInt(val)
-                    }
-                    break
-                case "inception": 
-                    if (key && val) {
-                        var tmpKey = key
-                        tmpKey = tmpKey.replace("inception_","")
-
-                        inception[tmpKey] = parseInt(val)
-                    }
-                    break
-                case "text": 
-                    var tmpPal = key.split("_")
-                    var tmpVal = tmpPal[1]
-
-                    if (tmpVal) {
-                        txt.push(tmpVal)
-                    }
-
-                    break
-                case "emoji": 
-                    var tmpPal = key.split("_")
-                    var tmpVal = tmpPal[1]
-
-                    if (tmpVal) {
-                        var emo = tmpVal.codePointAt(0).toString(16)
-                        emojis.push(emo)
-                    }
-
-                    break
-                case "caption": 
-                    var tmpPal = key.split("_")
-                    var tmpVal = tmpPal[1]
-
-                    if (tmpVal) {
-                        var capt = tmpVal
-                        caption.push(capt)
-                    }
-
-                    break
-                case "predict": 
-                    var tmpPal = key.split("_")
-                    var tmpVal = tmpPal[1]
-
-                    if (tmpVal) {
-                        predict.push(tmpVal)
-                    }
-
-                    break
-                case "user":
-                    var tmpPal = key.split("_")
-                    var tmpVal = tmpPal[1]
-
-                    if (tmpVal) {
-                        actions.push(tmpVal)
-                    }
-
-                    break
-                case "faces": 
-                console.log(key)
-                
-                    if (key) {
-                        var tmpVal = key
-                        tmpVal = tmpVal.replace("faces_", "")
-
-                        facecnt = parseInt(tmpVal)
-                    }
-
-                    break
-            }
-        }
-
-        model.classify = avm
-        model.delete = del
-        model.file = file
-        model.faces = facecnt
-        model.meta = meta
-        model.objects = obj
-        model.multi = multi
-        model.inception = inception
-        model.color = color
-        model.palette = palette
-        model.grayscale = grayscale
-        model.text = txt
-        model.user = user
-        
-        let modelEmo = [...new Set(emojis)]
-        model.emoji = modelEmo // unique
-
-        model.predict = predict
-        model.actions = actions
-
-        var modelTags =  [...new Set(tags)]
-        model.tags = modelTags
-        
-        //model.caption = alt.replace("caption-","").replace("caption_") // extracted from the caption
-        // caption now contains blip, yolo, and caption
-        model.caption = caption_from_image
-
-        if (model != lastDM) {
-            // don't repeat 
-            //console.log(model)
-        }
-        
-    }
-
-    lastDM = model
-    return model
+function removeLast(word, char){
+    var tmp = word.split("")
+    tmp[word.lastIndexOf(char)] = ""
+    return tmp.join("")
 }
 
-function updatePrediction(img) {
-    //console.log("UPDATE PREDICTION")
-    //console.log(img)
+function processActions(action_tags) {
+    actions_json = []
 
-    // get predictions
-    var predict = []
-    var colors = []
-    var grays = []
-    var search_tags = []
-    var objects_combined = []
+    var keyword, timestamp
+    for (var i in action_tags) {
+        tmp_json = {}
 
-    var maxconf_multi = 0
-    var maxconf_single = 0
-    var secondconf_single = 0
-    var faces = false
+        tag = action_tags[i]
+        tag = tag.replace("action_","")
+        aAction = tag.split("-")
+
+        for (var ii in aAction) {
+            tmp_tag = aAction[ii]
+            if (isNaN(tmp_tag)) {
+                keyword = tmp_tag
+            } 
+        }
+        tmp_json.keyword = keyword
+        tmp_json.timestamp = Date.now()
+
+        actions_json.push(tmp_json)
+    }
+
+    return actions_json
+}
+
+function processBLIP(blip_tags) {
+    blip_json = []
+
+    for (var i in blip_tags) {
+        blip = blip_tags[i]
+        blip = blip.replace("blip_","").replace("|","")
+        blip = mergeCommonWords(blip)
+        blip = replaceWords(blip)
+
+        aBLIP = blip.split(" ")
+        for (var ii in aBLIP) {
+            word = aBLIP[ii]
+
+            tmp_json = {}
+            if (!(banned_words.includes(word))) {
+                tmp_json.keyword = pluralize.singular(word)
+
+                // lookup emoji
+                emo = lookupEmoji(tmp_json.keyword)
+                tmp_json.emoji = emo
+
+                //tmp_json.confidence = -1 // no confidence ratings from BLIP
+                blip_json.push(tmp_json)
+            }
+        }
+
+    }
+
+    return blip_json
+}
+
+function processLlama(llama_tags) {
+    llama_json = []
+
+    for (var i in llama_tags) {
+        llama = llama_tags[i]
+        llama = llama.replace("llama_","").replace("|","")
+        llama = mergeCommonWords(llama)
+        llama = replaceWords(llama)
+
+        aLLAMA = llama.split(" ")
+        for (var ii in aLLAMA) {
+            word = aLLAMA[ii]
+
+            tmp_json = {}
+            if (!(banned_words.includes(word))) {
+                tmp_json.keyword = pluralize.singular(word)
+
+                // lookup emoji
+                emo = lookupEmoji(tmp_json.keyword)
+                tmp_json.emoji = emo
+
+                //tmp_json.confidence = -1 // no confidence ratings from BLIP
+                llama_json.push(tmp_json)
+            }
+        }
+
+    }
+
+    return llama_json
+}
+
+function processCLIP(clip_tags) {
+    clip_json = []
+
+    var keyword, conf
+    for (var i in clip_tags) {
+        tmp_json = {}
+        tag = clip_tags[i]
+
+        tag = tag.replace("clip_","")
+        aCLIP = tag.split("-")
+
+        for (var ii in aCLIP) {
+            word = aCLIP[ii]
+            if (isNaN(word)) {
+                keyword = pluralize.singular(word)
+                emo = lookupEmoji(keyword)
+
+            } else {
+                conf = parseInt(word) / 1000
+            }
+        }
+        tmp_json.keyword = keyword
+        tmp_json.confidence = conf
+        tmp_json.emoji = emo
+
+        clip_json.push(tmp_json)
+    }
+
+    return clip_json
+}
+
+
+function processColors(colors) {
+    var colors_json = {}
+    var pal = []
+
+    for (var i in colors) {
+        color = colors[i]
+
+        // primary
+        if (color.startsWith("color_primary-")) {
+            color = color.replace("color_primary-","#")
+            colors_json.primary = color
+        }
+
+        // palette
+        if (color.startsWith("color_palette-","#")) {
+            color = color.replace("color_palette-","#")
+            pal.push(color)
+        }
+    }
+
+    let colorset = [...new Set(pal)]
+    colors_json.palette = colorset
+
+    return colors_json
+}
+
+
+function processDetectron(detectron_tags) {
+    detectron_json = []
+    tags = []
+
+    let tmp_tags = [...new Set(detectron_tags)]
+
+    for (var i in tmp_tags) {
+        var tmp = {}
+
+        tag = tmp_tags[i]
+        tags = tag.toLowerCase().split("-")
+
+        var word = ""
+        var conf = 0
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            tmp_tag = tmp_tag.replace("detectron_","")
+            
+            if (isNaN(tmp_tag)) {
+                tmp_tag = tmp_tag.trim()
+                word = word + "_" + tmp_tag
+                emo = lookupEmoji(tmp_tag)
+            } else {
+                // is a number
+                conf = tmp_tag
+            }
+
+        }
+
+        // merge word if split by hyphens
+        //console.log(word)
+        word = removeLast(word, "_")
+        word = mergeCommonWords(word)
+
+        tmp.keyword = pluralize.singular(word)
+        tmp.confidence = parseInt(conf) / 1000
+        tmp.emoji = emo
+
+        // lookup emoji and add it here
+        detectron_json.push(tmp)
+    }
+
+    //console.log(detectron_json)
+    return detectron_json
+}
+
+
+function processFaces(face_tags) {
+    face_json = {}
+    tags = []
+    val = -1
+
+    //console.log(inception_tags)
+    for (var i in face_tags) {
+        tag = face_tags[i]
+        tags = tag.toLowerCase().split("-")
+
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            tmp_tag = tmp_tag.replace("faces_","")
+
+            if (!(isNaN(tmp_tag))) {
+                // is a number
+                val = parseInt(tmp_tag)
+            }
+        }
+    }
+
+    return val
+}
+
+function processInception(inception_tags) {
+    inception_json = []
+    tags = []
+
+    let tmp_tags = [...new Set(inception_tags)]
+
+    //console.log(inception_tags)
+    for (var i in tmp_tags) {
+        var tmp = {}
+
+        tag = tmp_tags[i]
+        tags = tag.toLowerCase().split("-")
+
+        var word = ""
+        var conf = 0
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            tmp_tag = tmp_tag.replace("inception_","")
+            
+            if (isNaN(tmp_tag)) {
+                tmp_tag = tmp_tag.trim()
+                word = word + "_" + tmp_tag
+                emo = lookupEmoji(tmp_tag)
+            } else {
+                // is a number
+                conf = tmp_tag
+            }
+
+        }
+        word = removeLast(word, "_")
+
+        // merge word if split by hyphens
+        //console.log(word)
+        word = mergeCommonWords(word)
+        tmp.keyword = pluralize.singular(word)
+        tmp.confidence = parseInt(conf) / 1000
+        tmp.emoji = emo
+
+        // lookup emoji and add it here
+        inception_json.push(tmp)
+    }
+
+    //console.log(inception_json)
+    return inception_json
+}
+
+
+function processMeta(meta_tags) {
+    meta_json = []
+    tags = []
+
+    let tmp_tags = [...new Set(meta_tags)]
+
+    for (var i in tmp_tags) {
+        var tmp = {}
+
+        tag = tmp_tags[i]
+        tags = tag.split("-")
+
+        key = tags[0]
+        key = key.replace("meta_","")
+        val = tags[1]
+
+        switch (key) {
+            case ("filesize"):
+                val = val / 100 + " MB"
+                break
+            case ("entropy"):
+                val = parseFloat(val) / 1000
+                /*
+                entropy = entropy.toString().split("")
+                entropy.splice(1, 0, ".")
+                entropy = entropy.join("")
+                val = parseFloat(entropy)
+                */
+
+                break
+            case ("aspect"):
+                val = val / 1000
+                break
+            default:
+                break
+        }
+
+        tmp[key] = val
+
+        // lookup emoji and add it here
+        meta_json.push(tmp)
+    }
+
+    //console.log(detectron_json)
+    return meta_json
+
+}
+
+function processNSFW(nsfw_tags) {
+    nsfw_json = {}
+    tags = []
+    val = -1
+
+    //console.log(inception_tags)
+    for (var i in nsfw_tags) {
+        tag = nsfw_tags[i]
+        tags = tag.toLowerCase().split("-")
+
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            tmp_tag = tmp_tag.replace("nsfw_","")
+
+            if (!(isNaN(tmp_tag))) {
+                // is a number
+                val = parseInt(tmp_tag) / 1000
+            }
+        }
+    }
+
+    return val
+}
+
+function processObject(obj_tags) {
+    obj_json = []
+    tags = []
+
+    let tmp_tags = [...new Set(obj_tags)]
+
+    for (var i in tmp_tags) {
+        var tmp = {}
+
+        tag = tmp_tags[i]
+        tags = tag.toLowerCase().split("-")
+
+        var word = ""
+        var conf = 0
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            tmp_tag = tmp_tag.replace("object_","")
+            
+            if (isNaN(tmp_tag)) {
+                tmp_tag = tmp_tag.trim()
+                word = word + "_" + tmp_tag
+                emo = lookupEmoji(tmp_tag)
+            } else {
+                // is a number
+                conf = tmp_tag
+            }
+
+        }
+
+        // merge word if split by hyphens
+        //console.log(word)
+        word = removeLast(word, "_")
+        word = mergeCommonWords(word)
+
+        tmp.keyword = pluralize.singular(word)
+        tmp.confidence = parseInt(conf) / 1000
+        tmp.emoji = emo
+
+        // lookup emoji and add it here
+        obj_json.push(tmp)
+    }
+
+    //console.log(detectron_json)
+    return obj_json
+
+}
+
+
+function processOCR(ocr_tags) {
+    ocr_json = {}
+    tags = []
+    val = ""
+
+    //console.log(inception_tags)
+    for (var i in ocr_tags) {
+        tag = ocr_tags[i]
+        tags = tag.toLowerCase().split("-")
+
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            tmp_tag = tmp_tag.replace("ocr_","")
+
+            if (isNaN(tmp_tag)) {
+                // is a number
+                val = tmp_tag.replace(/-/g," ")
+            }
+        }
+    }
+
+    return val
+}
+
+function processYOLO(yolo_tags) {
+    yolo_json = []
+    tags = []
+
+    let tmp_tags = [...new Set(yolo_tags)]
+
+    //console.log(inception_tags)
+    for (var i in tmp_tags) {
+        var tmp = {}
+
+        tag = tmp_tags[i]
+        tags = tag.toLowerCase().split("-")
+
+        var word = ""
+        var conf = 0
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            tmp_tag = tmp_tag.replace("yolo_","")
+            
+            if (isNaN(tmp_tag)) {
+                tmp_tag = tmp_tag.trim()
+                word = word + "_" + tmp_tag
+                emo = lookupEmoji(tmp_tag)
+            } else {
+                // is a number
+                conf = tmp_tag
+            }
+
+        }
+
+        // merge word if split by hyphens
+        //console.log(word)
+        word = removeLast(word, "_")
+        word = mergeCommonWords(word)
+
+        tmp.keyword = pluralize.singular(word)
+        tmp.keyword = tmp.keyword.trim()
+        tmp.confidence = parseInt(conf) / 1000
+        tmp.emoji = emo
+
+        // lookup emoji and add it here
+        yolo_json.push(tmp)
+    }
+
+    //console.log(yolo_json)
+    return yolo_json
+}
+
+function processPredict(prefs_tags) {
+    //console.log("PREDICT")
+    //console.log(prefs_tags)
+    var predict_tags = []
+    var tags = []
+    ret = ""
+
+    let tmp_tags = [...new Set(prefs_tags)]
+
+    //console.log(inception_tags)
+    for (var i in tmp_tags) {
+        var tmp = {}
+
+        tag = tmp_tags[i]
+        tags = tag.toLowerCase().split("_")
+
+        for (var ii in tags) {
+            tmp_tag = tags[ii]
+            if ((tmp_tag != "predict") && (tmp_tag != "prefs")) {
+               ret = tmp_tag
+            }
+        }
+
+        // lookup emoji and add it here
+    }
+
+    //console.log(yolo_json)
+    return ret
+}
+
+function processVotes(votes_tags) {
+    var votes_json = {}
+    var votes_first = []
+    var votes_second = []
+
+    for (var i in votes_tags) {
+        vote = votes_tags[i]
+        tmp_tag = vote.replace("votes_","").toLowerCase()
+
+        if (tmp_tag.startsWith("first")) {
+            tmp = tmp_tag.replace("first-","")
+            //console.log(tmp)
+            tmp = toUnicode(tmp)
+            votes_first.push(tmp)
+        }
     
-    if ((typeof img) == "string") {
-        img = document.getElementById(img)
+        if (tmp_tag.startsWith("second")) {
+            tmp = tmp_tag.replace("second-","")
+            //console.log(tmp)
+            tmp = toUnicode(tmp)
+            votes_second.push(tmp)
+
+        }
     }
     
-    if (img) {
-        // get the image
-        var clss = img.className
-        //console.log(clss)
+    votes_json.first = votes_first
+    votes_json.second = votes_second
 
-        if (clss) {
+    //console.log(votes_first)
+    //console.log(votes_second)
+    //console.log(votes_json)
+    return votes_json
+}
 
-            var aCls = clss.split(" ")
+function lookupEmoji(keyword) {
+    ret = ""
 
-            // precalculate max confidence
-            for (var i = 0; i < aCls.length; i++) {
-                var tmpCls = aCls[i]
-                if (tmpCls.includes("multi_")) {
-                    var tmp = tmpCls.replace("multi_","")
-                    var aTmp = tmp.split("-")
-                    var conf = aTmp[1]
+    for (var i in emoji_list) {
+        item = emoji_list[i]
+        key = Object.keys(item)
+        val = item[key]
 
-                    if (conf > maxconf_multi) {
-                        maxconf_multi = Math.round(conf)
-                    }
-                }
-            }
+        if (keyword == key) {
+            ret = toUnicode(val)
+        }
+    }
 
-            // precalculate max confidence
-            for (var i = 0; i < aCls.length; i++) {
-                var tmpCls = aCls[i]
-                if (tmpCls.includes("object_")) {
-                    var tmp = tmpCls.replace("object_","")
-                    var aTmp = tmp.split("-")
-                    var conf = aTmp[1]
+    return ret
+}
 
-                    if (conf > maxconf_single) {
-                        maxconf_single = Math.round(conf)
-                    }
-                }
-            }
+function collectEmojis(json) {
+    var emos = []
 
-            // precalculate second highest confidence
-            for (var i = 0; i < aCls.length; i++) {
-                var tmpCls = aCls[i]
-                if (tmpCls.includes("object_")) {
-                    var tmp = tmpCls.replace("object_","")
-                    var aTmp = tmp.split("-")
-                    var conf = aTmp[1]
+    for (var i in json) {
+        tmp_json = json[i]
+        emo = tmp_json.emoji
 
-                    if (conf > secondconf_single) {
-                        if (conf < maxconf_single) {
-                            secondconf_single = Math.round(conf)
-                        }
-                    }
-                }
-            }
+        if (emo && emo != "") {
+            emos.push(fromUnicode(emo))
+        }
+    }
 
-            for (var i = 0; i < aCls.length; i++) {
-                var cls = aCls[i]
+    return emos
+}
 
-                // remove avm predictions
-                //cls = cls.replace("predict_animals","")
-                //cls = cls.replace("predict_vegetables","")
-                //cls = cls.replace("predict_minerals", "")
+function updatePrediction(preds) {
+    var total_emojis = []
+    var blip_emojis = []
+    var clip_emojis = []
+    var detectron_emojis = []
+    var face_emojis = []
+    var inception_emojis = []
+    var llama_emojis = []
+    var object_emojis = []
+    var ocr_emojis = []
+    var nsfw_emojis = []
+    var yolo_emojis = []
+
+    // Get emojis from blip
+    blip_emojis = collectEmojis(preds.blip)
+    total_emojis = total_emojis.concat(blip_emojis)
+
+    // Get emojis from clip
+    clip_emojis = collectEmojis(preds.clip)
+    total_emojis = total_emojis.concat(clip_emojis)
+
+    // Get emojis from detectron
+    detectron_emojis = collectEmojis(preds.detectron)
+    total_emojis = total_emojis.concat(detectron_emojis)
+
+    // Get emojis from NSFW (manual)
+    if (preds.faces > 0) {
+        //for (var i = 0; i < preds.faces; i++) { // this doesn't work because of multiple faces
+        face_emojis.push('&#x1F642')
+    }
+    total_emojis = total_emojis.concat(face_emojis)
+
+    // Get emojis from inception
+    inception_emojis = collectEmojis(preds.inception)
+    total_emojis = total_emojis.concat(inception_emojis)
+
+    // Get emojis from llama
+    llama_emojis = collectEmojis(preds.llama)
+    total_emojis = total_emojis.concat(llama_emojis)
+    
+    // Get emojis from NSFW (manual)
+    if (preds.nsfw > .5) {
+        nsfw_emojis.push("🚫")
+    }
+    total_emojis = total_emojis.concat(nsfw_emojis)
+    
+    // Get emojis from SSD
+    object_emojis = collectEmojis(preds.object)
+    total_emojis = total_emojis.concat(object_emojis)
+
+    // Get emojis from OCR (manual)
+    if (preds.ocr != "") {
+        nsfw_emojis.push("💬")
+    }
+    total_emojis = total_emojis.concat(ocr_emojis)
+    
+    // Get emojis from YOLO
+    yolo_emojis = collectEmojis(preds.yolo)
+    total_emojis = total_emojis.concat(yolo_emojis)
+
+    // Tally emojis
+    total_emojis.sort()
+    var emoji_counts = {}
+    for (var i = 0; i < total_emojis.length; i++) {
+        emoji_counts[total_emojis[i]] = 1 + (emoji_counts[total_emojis[i]] || 0)
+    }
+
+    sorted = sortEmojis(emoji_counts) 
+    return sorted
+}
+
+function sortEmojis(emoji_counts) {
+
+    const keyArray = Object.keys(emoji_counts)
+    const emojis_sorted = keyArray.sort((a, b) => {
+        if (emoji_counts[a] < emoji_counts[b]) {
+            return 1
+        }
+        return -1
+    })
+
+    emojis_final = []
+    for (i in emojis_sorted) {
+        sorted = emojis_sorted[i]
+        for (ii in emoji_counts) {
+            key = ii //Object.keys(emoji_counts[ii])
+            val = emoji_counts[ii]
+            if (key == sorted) {
+                tmp = {}
                 
-                if (cls.includes("text_")) {
-                    predict.push("text")
-                }
+                tmp[key] = val
+                emojis_final.push(tmp)
+                //console.log("FINAL")
+                //console.log(tmp)    
+            }
+        }
+    }
+    //console.log(emojis_final);
 
-                if (cls.includes("content_")) {
-                    var tmp = cls.replace("content_","")
-                    var aTmp = tmp.split("-")
-                    var content = aTmp[0]
+    //return emojis_sorted
 
-                    //predict.push(content)
-                }
+    //console.log(emoji_counts)
+    return emojis_final //emoji_counts
+}
 
-                var target_conf = 3
-                if (cls.includes("multi_")) {
-                    var tmp = cls.replace("multi_","")
-                    var aTmp = tmp.split("-")
-                    var obj = aTmp[0]
-                    var conf = aTmp[1]
+function tallyVotes(emoji, preds) {
+    var votes = []
+    var emojis = ""
+    
+    if ((preds.faces > 0) && (emoji == "🙂")) {
+        votes.push("Face")
+    }
 
-                    objects_combined.push(obj)
+    if ((preds.nsfw > .35) && (emoji == "🚫")) {
+        votes.push("NSFW")
+    }
 
-                    if (conf == maxconf_multi) {
-                        search_tags.push(obj)
+    if ((preds.ocr != "") && (emoji == "💬")) {
+        votes.push("OCR")
+    }
 
-                        // adjust required confidence for person
-                        if (obj == "person") {
-                            target_conf = 9
-                        } 
+    emojis = collectEmojis(preds.blip)
+    for (var i in emojis) {
+        if (emoji == emojis[i]) {
+            votes.push("BLIP")
+        }
+    }
+    //console.log(emoji)
 
-                        if (conf > target_conf) {
-                            predict.push(obj) // + "-" + conf
+    emojis = collectEmojis(preds.clip)
+    for (var i in emojis) {
+        if (emoji == emojis[i]) {
+            votes.push("CLIP")
+        }
+    }
+
+    emojis = collectEmojis(preds.detectron)
+    for (var i in emojis) {
+        if (emoji == emojis[i]) {
+            votes.push("Detectron")
+        }
+    }
+
+    emojis = collectEmojis(preds.inception)
+    for (var i in emojis) {
+        if (emoji == emojis[i]) {
+            votes.push("Inception")
+        }
+    }
+
+    emojis = collectEmojis(preds.llama)
+    for (var i in emojis) {
+        if (emoji == emojis[i]) {
+            votes.push("LLaMa")
+        }
+    }
+
+    emojis = collectEmojis(preds.object)
+    for (var i in emojis) {
+        if (emoji == emojis[i]) {
+            votes.push("SSD")
+        }
+    }
+
+    emojis = collectEmojis(preds.yolo)
+    for (var i in emojis) {
+        if (emoji == emojis[i]) {
+            votes.push("YOLO")
+        }
+    }
+
+    //console.log(votes)
+    voteset = [...new Set(votes)]
+    return voteset
+}
+
+function stripHTML(html){
+    let doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+ }
+
+function matchCaption(caption, model) {
+    const regex = /\p{Extended_Pictographic}/ug
+
+    var tmp_caption = ""
+    var ret_caption = {}
+    var caption_score = 0
+    var abs_score = 0
+    var top_emojis = 0
+
+    model_emojis = collectEmojis(model)
+
+    matched = []
+    if (caption) {
+        caption = caption.toLowerCase()
+        caption = mergeCommonWords(caption)
+        caption = replaceWords(caption)
+
+        var aCaption = caption.split(" ")
+        aCaption = [...new Set(aCaption)]
+    
+        for (var i = 0; i < aCaption.length; i++) {
+            var word = aCaption[i]
+            
+            if (!(banned_words.includes(word))) {
+                var emo = lookupEmoji(pluralize.singular(word))
+                if (emo != "") {
+                    emo = fromUnicode(emo)
+                    for (var ii in model_emojis) {
+                        model_emo = model_emojis[ii]
+                        if (emo == model_emo) {
+                            tmp = {}
+                            tmp.word = word
+                            tmp.emoji = emo
+                            matched.push(tmp) 
                         }
-                    }
-                }
-
-                if (cls.includes("object_")) {
-                    var tmp = cls.replace("object_","")
-                    var aTmp = tmp.split("-")
-                    var obj = aTmp[0]
-                    var conf = aTmp[1]
-
-                    objects_combined.push(obj)
-
-                    if ((conf == maxconf_single) || (conf == secondconf_single)) {
-                        if (conf > 1) {
-                            if  (conf != secondconf_single) {
-                                // first is the worst
-                                predict.push(obj) // + "-" + conf
-                                search_tags.push(obj)
-                            } else {
-                                // second chance if worse than chance
-                                if (conf > target_conf) {
-                                    predict.push(obj) 
-                                    search_tags.push(obj)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (cls.includes("inception_")) {
-                    var tmp = cls.replace("inception_","")
-                    var aTmp = tmp.split("-")
-                    var obj = aTmp[0]
-                    var conf = aTmp[1]
-
-                    objects_combined.push(obj)
-
-                    if (conf == maxconf_multi) {
-                        search_tags.push(obj)
-                        predict.push(obj) // + "-" + conf
-
-                        /* if (conf > target_conf) {
-                            predict.push(obj) // + "-" + conf
-                        } */
-                    }
-                }
-
-                if (cls.includes("faces_")) {
-                    var tmp = parseInt(cls.replace("faces_",""))
-                    //var aTmp = tmp.split("_")
-                    //var obj = aTmp[0]
-                    //var conf = aTmp[1]
-
-                    var ret = ""
-                    if (tmp > 0) { 
-                        faces = true 
-                        ret = "face" 
-                    }
-
-                    if (ret) { 
-                        predict.push(ret) // + "-" + conf
-                        predict.push("face") // + "-" + conf
-                        //predict.push("animals") // + "-" + conf
-                    }
-                }
-
-                if (cls.includes("meta")) {
-                    var tmp = cls.replace("meta_","")
-                    var aTmp = tmp.split("-")
-                    var key = aTmp[0]
-                    var val = aTmp[1]
-
-                    if (key == "display_mode") {
-                        predict.push(val)
-                    }
-
-                    var skipped = false
-                    if (key == "filesize") {
-                        var fs = parseInt(val)
-                        // filesize is xbelow 5k
-                        if (fs < 5) { 
-                            // skip and automatically delete
-                            predict.push("skipped")
-                            tagImage("auto_delete",img.id)
-                            skipped = true
-                        }
-                    }
-
-                    if (key == "megapixels") {
-                        var mp = Math.round(val / 100)
-                        switch (mp) {
-                            case 0:
-                            case 1:
-                                if (!(skipped)) {
-                                    //predict.push("bargain")
-                                }
-                                break
-                            case 2:
-                            case 3:
-                            case 4:
-                                //predict.push("acceptable")
-                                break
-                            default: 
-                                //predict.push("passing")
-                            /*
-                            case 0:
-                                predict.push("zero")
-                                break
-                            case 1:
-                                predict.push("one")
-                                break
-                            case 2:
-                                predict.push("two")
-                                break
-                            case 3:
-                                predict.push("three")
-                                break
-                            case 4:
-                                predict.push("four")
-                                break
-                            case 5:
-                                predict.push("five")
-                                break 
-                            case 6:
-                                predict.push("six")
-                                break 
-                            case 7:
-                                predict.push("seven")
-                                break 
-                            case 8:
-                                predict.push("eight")
-                                break
-                            case 9:
-                                predict.push("nine")
-                                break 
-                            default:
-                                predict.push("ten")
-                            */
-                        }
-                        if (mp > 10) {
-                            predict.push("excellent")
-                        }
-                    }
-                }
-
-                if (cls.includes("predict")) {
-                    var tmp = cls.replace("predict_","")
-                    var aTmp = tmp.split("-")
-                    var output = aTmp[0]
-
-                    if (output == "nsfw") {
-                        predict.push("nsfw")
-                    } else {
-                        //predict.push("sfw")
-                    }
-
-                    if ((faces) || (output == "person") || (output == "people")) {
-                        if ((clss.includes("caption_male"))) {
-                            //predict.push("male")
-                        }
-
-                        if (clss.includes("caption_female")) {
-                            //predict.push("female")
-                        }
-
-                        if (clss.includes("caption_mixed_gender")) {
-                            //predict.push("male")
-                            //predict.push("female")
-                        }
-
-                        if ((clss.includes("caption_young"))) {
-                            predict.push("baby")
-                        }
-
-                        if (clss.includes("caption_adult")) {
-                            //predict.push("adult")
-                        }
-
-                        if (clss.includes("caption_baby")) {
-                            predict.push("baby")
-                        }
-
-                        if (clss.includes("caption_mixed_age")) {
-                            if (!((clss.includes("caption_male")) || (clss.includes("caption_female")))) {
-                                //predict.push("mixed_ages") // can't be mixed, just unknown
-                            }
-                        }
-
-                        faces = false // reset
-                    }
-
-                    if ((output) && (output != "undefined")) {
-                        predict.push(output)
-                    }
-                }
-
-                // clear extras
-                cls = cls.replace("predict_person", "")
-
-                // show colors
-                if (cls.includes("color")) {
-                    var c = cls.replace("color_","")
-                    var tmpCls = ""
-                    if (c.includes("actual")) { tmpCls = "primary" }
-                    if (c.includes("nearest")) { tmpCls = "nearest" }
-                    if (c.includes("gray")) { tmpCls = "gray" }
-                    if (c.includes("palette")) { tmpCls = "palette" }
-                    if (c.includes("grayscale")) { tmpCls = "grayscale" }
-
-                    c = c.replace("actual-","").replace("grayscale-","").replace("gray-","").replace("palette-","").replace("nearest-","")
-                    if ((tmpCls != "gray") && (tmpCls != "grayscale")) {
-                        // skip grays
-                        colors.push(c)
-                    } else {
-                        grays.push(c)
                     }
                 }
             }
         }
 
-        // show prediction
-        let aTA = [...new Set(predict)]
-        
-        let aCOL = [...new Set(colors)]
-        let aGRAY = [...new Set(grays)]
-        let aSEARCH = [...new Set(search_tags)]
+        var bCaption = caption.split(" ")
+        tmp_caption = caption
+        //console.log(matched)
+        for (i in bCaption) {
+            // loop through words in the caption
+            var word = bCaption[i]
+            var votes_first = votes.first
+            var votes_second = votes.second
 
-        var aEmojis = getEmojisFromTags(img.id, predict)
+            // skip banned words
+            if (!(banned_words.includes(word))) {
 
-        var ret = {}
-        ret.emojis = aEmojis.sort()
-        ret.tags = aTA
-        ret.colors = aCOL
-        ret.grays = aGRAY
-        ret.search = aSEARCH
+                for (var ii in matched) {
+                    tmp = matched[ii]
+                    tmp_word = tmp.word
+                    tmp_emo = tmp.emoji
 
-        var ccp = captionConfirmPrediction(img, ret.emojis, guessJSON)
-        ret.conf = ccp
-        //ret.conf = ret.conf.sort()
-        
-        return ret
+                    if (word == tmp_word) {
+                        // word matches
+                        for (var iii in votes_first) {
+                            // emoji is in the first section
+                            vote = votes_first[iii]
+                            if (tmp_emo == vote.emoji) {
+                                aCapt = tmp_caption.split(" ")
+                                for (var c in aCapt) {
+                                    tmp = aCapt[c]
+                                    if (tmp == word) {
+                                        aCapt[c] = tmp.replace(word, '<u title="' + vote.emoji + '">' + word + '</u> ' + vote.emoji + ' ')
+                                        abs_score++
+                                    }
+                                }
+                                tmp_caption = aCapt.join(" ").trim()
+                                caption_score = caption_score + 1
+                                top_emojis++
+                            }     
+                        }   
+
+                        for (var iii in votes_second) {
+                            // emoji is in the second section
+                            vote = votes_second[iii]
+                            // emoji is in the first section
+                            if (tmp_emo == vote.emoji) {
+                                aCapt = tmp_caption.split(" ")
+                                for (var c in aCapt) {
+                                    tmp = aCapt[c]
+                                    if (tmp == word) {
+                                        aCapt[c] = tmp.replace(word, '<i title="' + tmp_emo + '">' + word + '</i> ' + vote.emoji + ' ')
+                                    }
+                                }
+                                tmp_caption = aCapt.join(" ").trim()
+                                caption_score = caption_score - 1 // remove one for second place
+                            }     
+                        }
+                    }
+                }
+            
+            }
+        }
     }
+
+    ret_caption.original = caption
+    ret_caption.score = caption_score //Math.round((abs_score / top_emojis) * 100)
+    //ret_caption.score = (Math.round((abs_score / model_emojis.length) * 100) / 100) * 100 // percent
+    //if (isNaN(ret_caption.score)) { ret_caption.score = 0 }
+    //if (ret_caption.score > 100) { ret_caption.score = 100 }
+    //if (ret_caption.score < 0) { ret_caption.score = 0 }
+
+    ret_caption.emojis = model_emojis
+    ret_caption.caption = tmp_caption
+
+    return ret_caption
+}
+
+function finalVoteTally(emoji_counts, preds) {
+    votes = {}
+    first = []
+    second = []
+    
+    idx = 0
+    for (var i in emoji_counts) {
+        
+        emoji = emoji_counts[i]
+        key = Object.keys(emoji)
+        vote_count = emoji[key]
+
+        //console.log("Key: " + key + ", " + "Val: " + vote_count)
+
+        tally = tallyVotes(key, preds)
+
+        //console.log("TALLY: ")
+        //console.log(tally)
+
+        tmp = {}
+        tmp.emoji = key
+        tmp.votes = vote_count
+        tmp.bots = tally.join(",")
+
+        //console.log(tmp)
+        
+        if (idx == 0) {
+            // first guess is always promoted
+            first.push(tmp)
+        } else {
+            // two votes from two different bots can override
+            if ((idx < 2) && ((vote_count >= 2) && (tally.length >= 2))) {
+                // second guess only if more than 1 bot voted for it
+                first.push(tmp)
+            } else {
+                // three votes from three bots can override
+                if ((idx < 3) && ((vote_count >= 2) && (tally.length >= 2))) {
+                    first.push(tmp)
+                } else {
+                    if ((idx >= 3) && ((vote_count >= 3) && (tally.length >= 3))) {
+                        first.push(tmp)
+                    } else {
+                        second.push(tmp)
+                    }
+                        
+                }
+            }
+        }
+        idx++
+    }
+
+    votes.first = first
+    votes.second = second
+
+    return votes
+}
+
+function buildTallyHTML(tally) {
+    //console.log(tally)
+    var emoji_span = document.createElement("span")
+
+    var bots = tally.bots.split(",")
+    emoji_span.classList.add("emoji")
+    emoji_span.classList.add("votes-" + bots.length)
+    emoji_span.title = tally.votes + " Votes from " + bots.length + " Bots: " + tally.bots //"Votes: " + count
+    emoji_span.style.cursor = "default"
+    emoji_span.innerHTML = tally.emoji // + ": " + val
+    emoji_span.innerHTML = emoji_span.innerHTML.trim()
+
+    return emoji_span
+}
+
+function clearHTML(data, img) {
+
+    var final_el = document.getElementById("guess-final") // first
+    var guess_el = document.getElementById("guess-second") // guessJSON.all
+    var cpt_el = document.getElementById("guess-from-caption") // second?
+
+    guess_el.innerHTML = "" 
+    cpt_el.innerHTML = ""
+    final_el.innerHTML = ""
+}
+
+function updateHTML(emoji_counts, preds) {
+    tally = finalVoteTally(emoji_counts, preds)
+
+    var final_el = document.getElementById("guess-final") // first
+    var guess_el = document.getElementById("guess-second") // guessJSON.all
+    var cpt_el = document.getElementById("guess-from-caption") // second?
+
+    var div_BLIP = document.getElementById("caption-BLIP")
+    var div_LLAMA = document.getElementById("caption-LLAMA")
+    //console.log(emoji_counts)
+
+    var caption = preds.caption
+    caption_BLIP = caption.blip
+    matched_BLIP = matchCaption(caption_BLIP, preds.blip, tally)
+
+    caption_LLAMA = caption.llama
+    matched_LLAMA = matchCaption(caption_LLAMA, preds.llama, tally)
+
+    div_BLIP.innerHTML = matched_BLIP.caption
+    div_LLAMA.innerHTML = matched_LLAMA.caption
+
+    if (matched_BLIP.score == matched_LLAMA.score) {
+        if ((matched_BLIP.score / matched_BLIP.caption.length) < (matched_LLAMA.score / matched_LLAMA.caption.length)) {
+            cpt_el.innerHTML = matched_BLIP.caption
+        } else {
+            cpt_el.innerHTML = matched_LLAMA.caption
+        }
+    } else {
+        if (matched_BLIP.score > matched_LLAMA.score) {
+            cpt_el.innerHTML = matched_BLIP.caption
+
+        } else {
+            cpt_el.innerHTML = matched_LLAMA.caption
+        }
+    }
+    
+    var votes_first = votes.first
+    for (var i in votes_first) {
+        vote = votes_first[i]
+
+        vote_tag = "votes_first-" + vote.emoji //+ vote.bots.split(",").join("-") + "-"
+
+        //vote_tag = "vote_" + vote.bots.split(",").join("-") + "-" + vote.emoji
+        tagImage(preds.file.id, vote_tag)
+
+        emoji_span = buildTallyHTML(vote)
+        final_el.appendChild(emoji_span)
+    }
+
+    var votes_second = votes.second
+    for (var i in votes_second) {
+        vote = votes_second[i]
+        vote_tag = "votes_second-" + vote.emoji //+ vote.bots.split(",").join("-") + "-"
+        //vote_tag = "vote_" + vote.bots.split(",").join("-") + "-" + vote.emoji
+        tagImage(preds.file.id, vote_tag)
+
+        emoji_span = buildTallyHTML(vote)
+        guess_el.appendChild(emoji_span)
+    }
+        
+    // update colors
+    var col = document.getElementById("colors") // textarea
+    
+    // create html from colors
+    var htmlColors = []
+    col.innerHTML = ""
+    if (preds.colors) {
+        //console.log(preds.colors)
+        var tmpCls = ""
+        var clr = preds.colors
+        var aColors = []
+        aColors = clr.palette
+        
+        //console.log(aColors)
+
+        for (var i in aColors) {
+            var c = aColors[i]
+            colorspan = document.createElement("span")
+            colorspan.innerHTML = "&nbsp;"
+            colorspan.classList.add("color")
+            //colorspan.classList.add(tmpCls)
+            colorspan.style.backgroundColor = c
+
+            //var div = '<span class="color' + tmpCls + '" style="background-color: #' + c + '"></span>'
+            //console.log(div)
+
+            col.appendChild(colorspan)
+            htmlColors.push(colorspan) // div
+        }
+    }
+}
+
+
+function updateVotesHTML(emoji_counts, preds) {
+    tally = finalVoteTally(emoji_counts, preds)
+    
+    var votes_first = votes.first
+    for (var i in votes_first) {
+        vote = votes_first[i]
+
+        vote_tag = "votes_first-" + vote.emoji //+ vote.bots.split(",").join("-") + "-"
+
+        //vote_tag = "vote_" + vote.bots.split(",").join("-") + "-" + vote.emoji
+        tagImage(preds.file.id, vote_tag)
+    }
+
+    var votes_second = votes.second
+    for (var i in votes_second) {
+        vote = votes_second[i]
+        vote_tag = "votes_second-" + vote.emoji //+ vote.bots.split(",").join("-") + "-"
+        //vote_tag = "vote_" + vote.bots.split(",").join("-") + "-" + vote.emoji
+        tagImage(preds.file.id, vote_tag)
+    }
+        
+}
+
+function packageEmojisModel(model) {
+    tmp_emojis = []
+    model_emojis = []
+
+    tmp_emojis = collectEmojis(model.blip)
+    model_emojis = model_emojis.concat(tmp_emojis)
+
+    tmp_emojis = collectEmojis(model.clip)
+    model_emojis = model_emojis.concat(tmp_emojis)
+
+    tmp_emojis = collectEmojis(model.detectron)
+    model_emojis = model_emojis.concat(tmp_emojis)
+
+    tmp_emojis = collectEmojis(model.inception)
+    model_emojis = model_emojis.concat(tmp_emojis)
+
+    tmp_emojis = collectEmojis(model.llama)
+    model_emojis = model_emojis.concat(tmp_emojis)
+
+    tmp_emojis = collectEmojis(model.object)
+    model_emojis = model_emojis.concat(tmp_emojis)
+
+    tmp_emojis = collectEmojis(model.yolo)
+    model_emojis = model_emojis.concat(tmp_emojis)
+
+    if (model.nsfw > .5) {
+        tmp_emojis = ["🚫"]
+        model_emojis = model_emojis.concat(tmp_emojis)
+    }
+
+    if (model.ocr != "") {
+        tmp_emojis = ["💬"]
+        model_emojis = model_emojis.concat(tmp_emojis)
+    }
+
+    for (var i in model_emojis) {
+        model_emojis[i] = toUnicode(model_emojis[i])
+    }
+
+    model_emojis = [...new Set(model_emojis)] // remove duplicates
+    return model_emojis
+}
+
+function buildDataModel(which) {
+    var model = {}
+    var action_tags = []
+    var blip_tags = []
+    var clip_tags = []
+    var detectron_tags = []
+    var face_tags = []
+    var inception_tags = []
+    var llama_tags = []
+    var meta_tags = []
+    var nsfw_tags = []
+    var object_tags = []
+    var ocr_tags = []
+    var yolo_tags = []
+    var colors_tags = []
+    var votes_tags = []
+    var predict_tags = []
+
+    // in case the whole image comes through or doesn't
+    if ((typeof which) == "string") {
+        img = document.getElementById(which)
+    }
+
+    if (img) {
+
+        if (img.className) {
+            // get the image
+            var clss = img.className
+            //console.log(clss)
+    
+            if (clss) {
+                var aCls = clss.split(" ")
+                for (var i in aCls) {
+                    cls = aCls[i]
+                    cls = cls.toLowerCase()
+                    //console.log(cls)
+                    if (cls.startsWith("action_")){
+                        action_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("color_primary") || (cls.startsWith("color_palette"))) {
+                        colors_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("blip_")){
+                        blip_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("clip_")){
+                        clip_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("detectron_")){
+                        detectron_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("faces_")){
+                        face_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("inception_")){
+                        inception_tags.push(cls)
+                    }
+
+                    if (cls.startsWith("llama_")){
+                        llama_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("meta_")){ 
+                        meta_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("nsfw_")) {
+                        nsfw_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("object_")){ 
+                        object_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("ocr_")){ 
+                        ocr_tags.push(cls)
+                    }
+    
+                    if (cls.startsWith("yolo_")){
+                        yolo_tags.push(cls)
+                    }
+
+                    if (cls.startsWith("votes_")){
+                        votes_tags.push(cls)
+                    }
+
+                    if (cls.startsWith("prefs_")){
+                        predict_tags.push(cls)
+                    }
+                }
+            }
+        }
+    }
+
+    colors_json = processColors(colors_tags)
+    model.colors = colors_json
+
+    // bots 
+    model.actions = processActions(action_tags)
+    model.blip = processBLIP(blip_tags)
+    model.clip = processCLIP(clip_tags)
+    model.detectron = processDetectron(detectron_tags)
+    model.faces = processFaces(face_tags)
+    model.inception = processInception(inception_tags)
+    model.llama = processLlama(llama_tags)
+    model.metadata = processMeta(meta_tags)
+    model.nsfw = processNSFW(nsfw_tags)
+    model.object = processObject(object_tags)
+    model.ocr = processOCR(ocr_tags)
+    model.predict = processPredict(predict_tags)
+    model.yolo = processYOLO(yolo_tags)
+    model.votes = processVotes(votes_tags)
+    model.emojis = packageEmojisModel(model)
+
+    // stamp it
+    model.timestamp = Date.now()
+
+    // user info
+    var user = {}
+    user.name = username
+    model.user = user
+
+    // update with file information
+    if (img) {
+        file = {}
+        if (img.id) {
+            file.id = img.id
+        }
+        if (img.src) {
+            file.thumbnail = img.src
+            tn = img.src
+            file.image = tn.replace("tn/thumb.","")
+    
+        }
+        model.file = file
+    }
+
+    if (img) {
+        caption = {}
+        if (img.title) {
+            caption.blip = replaceWords(img.title)
+        }
+        if (img.alt) {
+            caption.llama = replaceWords(img.alt)
+        }
+        model.caption = caption
+    }
+
+    //var emos = []
+    //emos = getEmojisFromTags(which, keywords)
+
+    //console.log(model)
+
+    return model
 }

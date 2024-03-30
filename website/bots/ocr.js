@@ -38,7 +38,7 @@ function OCRworker(which) {
                 var emo_list = preds.emojis
                 var emo_tags = []
                 // tag with emojis
-                for (var i = 0; i < emo_list.length; i++) {
+                for (var i in emo_list) {
                     var emo = emo_list[i]
                     if (emo) {
                         emo_tags.push(emo)                
@@ -46,10 +46,10 @@ function OCRworker(which) {
                 }
 
                 console.log("OCR Worker Adding tag: " + emo_tags.join(" "))
-                tagImage(which, "emoji_" + emo_tags.join(" "))
+                tagImage(which, "OCRemoji_" + emo_tags.join(" "))
 
                 // check preferences
-                PREFworker(which)
+                //PREFworker(which)
             }
 
             

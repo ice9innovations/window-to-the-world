@@ -18,11 +18,13 @@ if (isset($_REQUEST['logout'])) {
 // If there is a username, they are logged in, and we'll show the logged-in view
 if(isset($_SESSION['username'])) {
 
+    /*
     echo "<script>\r\n  var session = {}\r\n";
     echo "  session.email = \"" . $_SESSION['username'] . "\"\r\n";
     echo "  session.name = \"" . sha1($_SESSION['username']) . "\"\r\n";
     echo "</script>\r\n";
-
+    */
+    
     include("main.php");
     
     die();

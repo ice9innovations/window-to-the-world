@@ -4,11 +4,11 @@ include("../inc/header.php");
 unset($_SESSION['username']);
 
 ?>
-
 <style>
     .spacer { height: 20px; }
 
 </style>
+
 
 <body class="logged-out" onload="init()">
     <main>
@@ -39,7 +39,7 @@ unset($_SESSION['username']);
                                             Window to the World is all about YOU. 
                                             It learns what you like and what you dislike. 
                                             Then shows you more of what you want to see and less 
-                                            of what you don't. <a href="#">Learn more</a>
+                                            of what you don't. <a href="https://github.com/ice9innovations/window-to-the-world">Learn more</a>
                                         </p>
 
                                         <p id="validate_file">
@@ -103,7 +103,23 @@ unset($_SESSION['username']);
                     <div class="terms">
 
                         <p>
-                        By using this system, you consent to the following conditions.
+                        <strong>By using this system, you consent to the following conditions:</strong>
+
+This is a technology demonstration. 
+All data collected is saved based on the image that you use to login. No personally identifying information is collected or saved in this system.
+The data that is being collected will be used to train this AI in the future. 
+Copyright notice. All images are licencsed through COCO under the Creative Commons license.
+We do not own the copyright for the images used in this demonstration.
+The images used are part of the <a href="https://cocodataset.org/">COCO dataset</a>. COCO is a large-scale object detection, segmentation, and captioning dataset.
+By testing our technology against a known scientific dataset, we are able to test our 
+results against a benchmark. The COCO images have been peer reviewed and do not contain nudity. However, to report an image as inappropriate, please file an issue on the Window to the World 
+<a href="https://github.com/ice9innovations/window-to-the-world/issues">GitHub Repo</a>.
+                        </p>
+
+<p>&nbsp;</p>
+                        <p>
+                        <!-- previous disclaimer 
+                        <p>
                         These are not my images. They are randomly loaded from imgur. Because of that they could contain literally anything you can take a picture of. I take no responsibility for these images. They are NOT hosted on this server. They will not be seen by anyone but you and anyone else looking at your screen. To report an image, please report it at Imgur, the source of the data.
                         </p>
 
@@ -111,14 +127,6 @@ unset($_SESSION['username']);
                         This project is intended to be a filter for these images. As it develops we will add nudity filters and other filters to make this datastream more pleasant to look at. In the meantime, enter at your own risk.
                         <strong>You must be 18 to continue.</strong>
 
-                        </p>  
-                        
-                        <!--
-                        <p>
-                            By using our innovative new 
-                            system, we are able to show people exactly what they want to see, 
-                            when they want to see it. This means that people can get the information
-                            they need, when they need it, without having to search multiple websites.     
                         </p>
                         -->
                     </div>

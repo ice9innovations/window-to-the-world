@@ -86,6 +86,8 @@ if (file_exists($target_file)) {
         // Create connection
         $conn = new mysqli($servername, $username, $password, $dbname);
         // Check connection
+echo "HERE";
+
         if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
         }

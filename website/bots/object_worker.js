@@ -8,8 +8,9 @@ function objBot(which) {
     //console.log("objectBot: " + which)
     var tagStr = ""
 
-    var url = "/object/object.php?img=" + which //.replace("b.jpg",".jpg")
-    //console.log("Object Worker fetching url: " + url)
+    var url = "/object/?img=" + which //.replace("b.jpg",".jpg")
+    console.log("Object Worker fetching url: " + url)
+    
     fetch(url, {
         mode: 'no-cors',
         method: 'GET',
@@ -38,28 +39,41 @@ async function processResponse(response) {
     var jsonData                    
     if (response.body) {
         jsonData = JSON.parse(data)
+        //jsonData = data
     }
 
     if (jsonData) {
-        var tags = jsonData.tags
-
+        var tags = jsonData
+        //console.log(tags)
         var tagStr = ""
         if (tags) {
-            for (var key in tags) {
-                var val = tags[key]
-                var tmpVal = val
+            for (var i in tags) {
+                var tag = tags[i]
 
-                if (val) { val = val.toString().toLowerCase() }
-                if (tmpVal < 10) { val = "0" + val }
+                var tmpVal = tag.confidence
+                var obj = tag.object
+                var emo = tag.emoji
 
-                tagStr += "object_"
-                tagStr += key.toLowerCase() // key
-                tagStr += "-" // separator
-                tagStr += val.replace("/ /g","_").replace("[","-").replace("]","").replace("'","") // value
-                tagStr += " "
+                if (obj) {
+                    conf = 0
+                    if (tmpVal) { 
+                        //conf = Math.round(tmpVal)
+                        conf = tmpVal.toFixed(3) * 1000
+                        conf = conf.toString()
+                    }
+    
+                    tagStr += "object_"
+                    tagStr += obj.toLowerCase() // key
+                    tagStr += "-" // separator
+                    tagStr += conf //.replace("/ /g","_").replace("[","-").replace("]","").replace("'","") // value
+                    tagStr += " "
+                }
+
+                if (emo) {
+                    tagStr += "ObjectEmoji_" + emo + " "
+                }
             }
 
-            
             // add tags         
             if (tagStr != "")  {
                 console.log("Object Worker Adding tag: " + tagStr)

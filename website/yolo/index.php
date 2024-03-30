@@ -4,8 +4,10 @@
 $ch = curl_init();
 
 // set url
-//curl_setopt($ch, CURLOPT_URL, "http://192.168.0.32:7880/?img=" . $_GET["img"]);
-curl_setopt($ch, CURLOPT_URL, "http://192.168.0.32:9001/?img=" . $_GET["img"]);
+//curl_setopt($ch, CURLOPT_URL, "http://192.168.0.14:9001/?img=" . $_GET["img"]);
+//curl_setopt($ch, CURLOPT_URL, "http://192.9.154.176/yolo/?img=" . $_GET["img"]);
+//curl_setopt($ch, CURLOPT_URL, "http://127.0.0.1:7776/?url=" . $_GET["img"]);
+curl_setopt($ch, CURLOPT_URL, "http://138.2.237.181/yolo/?img=" . $_GET["img"]);
 
 //return the transfer as a string
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);

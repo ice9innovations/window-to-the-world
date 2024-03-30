@@ -8,7 +8,7 @@ $post = $img;
 $ch = curl_init();
 
 // set url
-curl_setopt($ch, CURLOPT_URL, "localhost:8088/");
+curl_setopt($ch, CURLOPT_URL, "http://178.62.236.25:8088/");
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, "img=" . $post);
 

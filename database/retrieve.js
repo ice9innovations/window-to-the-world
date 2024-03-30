@@ -13,8 +13,8 @@ var db_password = process.env.DB_PASSWORD
 var db_url = process.env.DB_URL;
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-//const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
-const uri = "mongodb://" + db_user + ":" + db_password + "@" + db_url + "/?retryWrites=true&w=majority"
+const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
+//const uri = "mongodb://" + db_user + ":" + db_password + "@" + db_url + "/?retryWrites=true&w=majority"
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -53,7 +53,7 @@ const server = http.createServer((req, res) => {
   }
 
   // only accept requests from known hosts
-  var allowed = true // override
+  allowed = true // override
 
   if (allowed) {
     if (req.params.user) {
@@ -104,7 +104,9 @@ function deleteImg(client, img, res) {
   console.log(img)
 var tmp = img[0]
 
-  var newID = tmp.guid
+  if (tmp) {
+  
+var newID = tmp.guid
 console.log(newID)
 
   //var qImg = img.guid
@@ -118,6 +120,9 @@ console.log(q)
 
   });
 
+} else {
+  console.log("GUID not found")
+}
 
   returnJSON(img, res);
 

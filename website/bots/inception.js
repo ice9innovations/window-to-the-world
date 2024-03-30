@@ -27,35 +27,43 @@ function INCEPTIONworker(which) {
             //var tagStr = tags.join(" ")
             if (results) { 
                 if (results != " ") {
-                  console.log("Inception_v3 results: " + results)
+                  //console.log("Inception_v3 results: " + results)
                         //tagImage(which, capt2)
                   var r = results.split(',')
-		  for (var i = 0; i < r.length; i++) {
+		          for (var i = 0; i < r.length; i++) {
                     var tmp = r[i]
-                    var aTmp = tmp.split("|")
+                    var aTmp = tmp.split(":")
 
                     var key = aTmp[0]
 
                     if (key) {
-                      key = key.replace("'","").replace("[","").replace("]","").trim()
+                      key = key.replace(/"/g,"").replace(/'/g,"").replace("[","").replace("]","").trim()
                     }
 
                     var val = aTmp[1]
 
                     if (val) {
-                      val = val.replace("'","").replace("[","").replace("]","").trim()
-                      val = Math.round(parseFloat(val) * 100) / 100
+                      val = val.replace(/"/g,"").replace(/'/g,"").replace("[","").replace("]","").trim()
+                      val = Math.round(parseFloat(val).toFixed(3) * 1000) / 1000
                     }
 
             //#print("{0:>6.2%} : {1}".format(score, name))
-                    if (val >= .625) {
-                      console.log("Inception key: " + key)
-                      console.log("Inception val: " + val)
-                      var tag = "inception_" + key + "-" + (val * 100)
+                    if (val >= .5) {
+                      var tag = "inception_" + key + "-" + Math.floor(val * 1000)
+                      var emoji = "emoji_" + aTmp[2]
 
-                      console.log("Inception_v3 tagging image with " + tag)
                       tagImage(which,tag)
+                      console.log("Inception_v3 Worker tagging image with " + tag)
                     }
+
+                    // emoji
+                    if (val >= .5) {
+                      var emoji = "InceptionEmoji_" + aTmp[2]
+  
+                      tagImage(which,emoji)
+                      console.log("Inception_v3 Worker tagging image with " + emoji)
+                    }
+
                   }
                 }
             }

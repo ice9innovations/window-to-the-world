@@ -6,7 +6,7 @@ $user = $_GET['user'];
 $ch = curl_init();
 
 // set url
-$url = "localhost:8086/?user=" . $user;
+$url = "http://178.62.236.25:8086/?user=" . $user;
 
 curl_setopt($ch, CURLOPT_URL, $url);
 

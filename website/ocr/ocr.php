@@ -4,7 +4,7 @@
 $ch = curl_init();
 
 // set url
-curl_setopt($ch, CURLOPT_URL, "localhost:6000/?img=" . $_GET["img"]);
+curl_setopt($ch, CURLOPT_URL, "http://192.168.0.32:7840/?img=" . $_GET["img"]);
 
 //return the transfer as a string
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);

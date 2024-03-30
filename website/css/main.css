@@ -183,18 +183,16 @@
         }
 
             #predict #predict-caption {
-              display: none;
               position: absolute;
               width: 100%;
               color: #FFF;
               font-family: sans-serif;
               text-align: center;
               margin-left: 20px;
-              margin-top: 450px;
+              margin-top: 400px;
             }
 
             #predict #confirmed {
-                display: none;
                 height: 75px;
 
                 background: transparent;
@@ -243,21 +241,6 @@
                 z-index: 9;
             }
 
-#yolo,
-#guess { 
-  display: none; 
-}
-
-#guess-final {
-  height: 75px;
-  font-size: 48px;
-  text-align: center;
-}
-
-#guess-from-caption {
-  font-size: 24px;
-  text-align: center;
-}
                 #predict #mask A,
                 #predict #flipped A,
                 #predict #guess A { 
@@ -580,7 +563,7 @@
                 
                 position: absolute;
                 left: 50%;
-                top: 440px;
+                top: 410px;
 
                 margin-left: -72px;
                 z-index: 9;
@@ -851,10 +834,6 @@
             }
 
             #guess {
-                display: none;
-            }
-
-            #guess-from-caption {
                 background: transparent;
                 margin-left: 1px;
                 padding-left: 0;
@@ -868,7 +847,7 @@
             }
 
             #skip {
-                top: 480px;
+                top: 420px;
                 padding-left: 7px;
             }
 

@@ -14,8 +14,8 @@ var db_password = process.env.DB_PASSWORD
 var db_url = process.env.DB_URL // huhgg.gcp.mongodb.net
 
 const { MongoClient, ServerApiVersion } = require('mongodb')
-//const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
-const uri = "mongodb://" + db_user + ":" + db_password + "@" + db_url + "/?retryWrites=true&w=majority"
+const uri = "mongodb+srv://" + db_user + ":" + db_password + "@cluster0.huhgg.gcp.mongodb.net/?retryWrites=true&w=majority"
+//const uri = "mongodb://" + db_user + ":" + db_password + "@" + db_url + "/?retryWrites=true&w=majority"
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 

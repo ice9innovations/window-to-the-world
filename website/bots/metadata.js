@@ -59,8 +59,8 @@ function METADATAworker(which, username) {
                                 if (fs > 4) {
                                     console.log("Metadata Worker starting object workers for: " + which)
                                     // only run if greater than 0mp
-                                    OBJECTworker(which, username)
-                                    COCOworker(which, username)
+                                    // OBJECTworker(which, username)
+                                    // COCOworker(which, username)
                                 } 
                             }
                         }

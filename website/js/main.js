@@ -36,27 +36,30 @@ function formatURL(which) {
     var el = document.getElementById(which)
     tn = which.src
 
-    if (!(which.includes("ad-"))) {
-        if (which.includes("pd-")) {
-            // public domain 
-            url = pd_server + "/public_domain/img/" + which.replace("pd-","")
-            iid = which.replace("pd-","img-")
-        } else {
-            url = server + server_path + which + extension
-            tn = server + thumbnail_path + which + thumbnail_extension
-            iid = "img-" + which
-        }
-    } else { 
-        // it's an ad
-        url = "https://img.window-to-the-world.org/img/" + which.replace("ad-","")
-        iid = which.replace("ad-","img-")
-    }
+    if (tn) {
 
-    // format response in JSON
-    var ret = {}
-    ret.url = url
-    ret.iid = iid 
-    ret.tn = tn
+        if (!(which.includes("ad-"))) {
+            if (which.includes("pd-")) {
+                // public domain 
+                url = pd_server + "/public_domain/img/" + which.replace("pd-","")
+                iid = which.replace("pd-","img-")
+            } else {
+                url = server + server_path + which + extension
+                tn = server + thumbnail_path + which + thumbnail_extension
+                iid = "img-" + which
+            }
+        } else { 
+            // it's an ad
+            url = "https://img.window-to-the-world.org/img/" + which.replace("ad-","")
+            iid = which.replace("ad-","img-")
+        }
+    
+        // format response in JSON
+        var ret = {}
+        ret.url = url
+        ret.iid = iid 
+        ret.tn = tn
+    }
 
     return ret
 }
@@ -77,6 +80,7 @@ function uuidv4() {
 
 // INITIALIZATION FUNCTIONS
 
+var skiptime = 0
 function init() {
     var files = ["/emojis/emojis4.json"]
 
@@ -85,6 +89,10 @@ function init() {
         initialized = true
         preload(files)
     }
+
+    skip = setInterval(function() {
+      skiptime++
+    }, 500)
 }
 
 async function preload(files) {
@@ -109,7 +117,9 @@ function initAfterPreload(emojis_from_json) {
 
     fillScreen()
     initialized = true
-    
+
+    moveTapeWiggle()
+
     var lastImg
     /* no 404s anymore because no imgur
     autodelete = setInterval(function() {
@@ -148,10 +158,10 @@ function initAfterPreload(emojis_from_json) {
         clearHTML()
 
         if (windowScreen.innerHTML == "") {
-            moveTapeLeft(1)
+            //moveTapeLeft(1)
             // reset timer
-            //clearWatcher(pageTimer)
-            //startPageTimer()
+            clearWatcher(pt)
+            pt = startPageTimer()
         }
 
         var cur = getCurrentImage()
@@ -411,11 +421,6 @@ function clickImage(which) {
         console.log("Zoom image: " + formattedURL.iid)
         console.log("Advertisement? " + cls.includes("advertisement"))
 
-        if (cls.includes("advertisement")) {
-            // handle ads differently
-            trackAdImage(which, formattedURL.url)
-        } 
-        
         // make predictions
         tagImage(formattedURL.iid, "user_zoom predict_zoom predict_delete ")
         //tagImage(iid, "predict_like predict_dislike predict_superlike ")
@@ -433,10 +438,21 @@ function clickImage(which) {
             tagImage(formattedURL.iid, "user_zoom-many") 
         }
 
+        if (cls.includes("advertisement")) {
+            // handle ads differently
+            trackAdImage(which, formattedURL.url)
+            zoomImage(which, formattedURL.url)
+        } else {
+	    var cocoURL = "https://cocodataset.org/#explore?id="
+            var cocoImg = parseInt(which)
+            var goto = cocoURL + cocoImg
+
+            window.open(goto)
+        } 
+        
         // show image to user
         //var imgur = iid.replace("img-","")
         //var url = "https://i.imgur.com/" + imgur + ".jpg"
-        zoomImage(which, formattedURL.url)
     
     }
 }
@@ -582,7 +598,8 @@ function getTapePositionCls(img) {
 
 function generateRandomFiles(num) {
     if (!(num)) { num = 1 }
-    
+    console.log("Fetching images: " + num)
+
     var f = fetch('/coco/?num=' + num)
     .then(function(response) {
         return response.json()
@@ -657,12 +674,12 @@ function getAdvertisement() {
 }
 
 function getImages(num = 0, buffer = windowBuffer) {
-    if (!(initialized)) { initialized = true }
-
-    // load a buffer of images to test
-    var aBatch = []
-    aBatch = generateRandomFiles(num)
-    //console.log(aBatch)
+    if (initialized == true) {
+        // load a buffer of images to test
+        var aBatch = []
+        aBatch = generateRandomFiles(num)
+        //console.log(aBatch)
+    }
 }
 
 function hideOverlay() { 
@@ -776,6 +793,8 @@ function moveTapeLeft(num) {
     var buffer_links = el.getElementsByTagName("a")
     
     var bufferCount = 0
+
+    // couldn't you just prepend it instead though?
     for (var i = 0; i < buffer_links.length; i++) {
         if (i == 0) {
             // first image
@@ -784,11 +803,11 @@ function moveTapeLeft(num) {
         }
         //bufferCount++
     }
-    
+
     overflowHistory()
 
     // replace it with a new image
-    getImages(ITERATE)
+    getImages(ITERATE) // 
 
 }
 
@@ -858,7 +877,7 @@ function moveTapeRight(num) {
 function moveTapeWiggle(num) {
     // preload three images from the past
     moveTapeRight(num)
-    moveTapeRight(num)
+    moveTapeLeft(num)
 }
 
 function removeFirstItem() {
@@ -906,6 +925,8 @@ function resolve_image(value){
 function retrieveLastItem() {
     console.log("Get last item from the database")
     // get most recent item from the database
+console.log("Username: " + username)
+
     var url = "/retrieve/retrieve.php?user=" + username                               
 
     // create an anchor tag 
@@ -1124,30 +1145,32 @@ function setPageBackground(which) {
 }
 
 function skipCurrentImage() {
-
-    // reset timer
-    clearHTML()
-    //clearWatcher(pageTimer)
-    //startPageTimer()
+    if (skiptime > 0) {
+      // reset timer
+      clearHTML()
+      //clearWatcher(pageTimer)
+      //startPageTimer()
     
     
-    var img = getCurrentImage()
+      var img = getCurrentImage()
 
-    if (img) {
+      if (img) {
         console.log("Skip image: " + img)
         tagImage(img, "user_skip")
-    }
+      }
     
-    moveTapeLeft(1)
+      moveTapeLeft(1)
 
-    img = getCurrentImage()
-    updatePrediction(img)
+      img = getCurrentImage()
+      updatePrediction(img)
 
-    getAdvertisement()
+      getAdvertisement()
 
-    // reset timer
-    //clearWatcher(pageTimer)
-    //startPageTimer()
+      // reset timer
+      //clearWatcher(pageTimer)
+      //startPageTimer()
+      skiptime = 0
+    }
 }
 
 function startPageTimer() {
@@ -1169,6 +1192,8 @@ function startPageTimer() {
     pageTimer = setInterval(function() {
         moveTapeLeft(1)
     }, SPEED * 1000)
+
+    return pageTimer
 }
 
 function superCurrentImage() {
@@ -1266,24 +1291,22 @@ function testImage(which) {
             
             var del = p.classList.contains("predict_404")
 
+            // collect metadata in all cases
+            METADATAworker(which, username)
+
             if (!(del)) {
                 // don't run these bots on 
                 // images that will get deleted
-                //objectBot(which)
-                //cocoBot(which)
-
+                OBJECTworker(which, username)
+                COCOworker(which, username)
                 CAPTIONworker(which)
                 BLIPworker(which)
                 YOLOworker(which)
                 INCEPTIONworker(which)
-                // SNAILworker(which)
+                SNAILworker(which)
                 FACEworker(which)
                 OCRworker(which)                    
             }
-
-            // run these bots anyway
-            //metaBot(which)
-            METADATAworker(which, username)
 
         //}
     }

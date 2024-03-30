@@ -8,8 +8,8 @@ function snail(which) {
     //console.log("objectBot: " + which)
     var tagStr = ""
 
-    var url = "/snail/snail.php?img=" + which //.replace("b.jpg",".jpg")
-    //console.log("Snail Worker fetching url: " + url)
+    var url = "/colors/?img=" + which //.replace("b.jpg",".jpg")
+    console.log("Snail Worker fetching url: " + url)
     fetch(url, {
         mode: 'no-cors',
         method: 'GET',
@@ -44,44 +44,41 @@ async function processResponse(response) {
     if (jsonData) {
         if (jsonData) {
             var colors = jsonData.colors
-            var palette = jsonData.palette
-            var grayscale = jsonData.grayscale
+            dominant = colors[1]
+            colors = colors[2] // copic
+
+            var palette = colors.palette[0]["copic"]
+
+            //console.log(palette)
+            //var grayscale = jsonData.grayscale
 
             var tagStr = ""
-            if (colors) {
-                for (var key in colors) {
-                    var val = colors[key]
+            if (dominant) {
+                for (var key in dominant) {
+                    var val = dominant[key]
+                    val = val.hex
 
-                    tagStr += "color_"
-                    tagStr += key // key
+                    tagStr += "color_primary"
+                    //tagStr += key // key
                     tagStr += "-" // separator
                     tagStr += val.replace("#","") // value
                     tagStr += " "
                 }
 
-            }      
+            }    
 
             if (palette) {
                 for (var key in palette) {
                     var val = palette[key]
+                    val = val.hex
 
                     tagStr += "color_palette-"
                     tagStr += val.replace("#","") // value
                     tagStr += " "
                 }
 
-            }   
-            
-            if (grayscale) {
-                for (var key in grayscale) {
-                    var val = grayscale[key]
-
-                    tagStr += "color_grayscale-"
-                    tagStr += val.replace("#","") // value
-                    tagStr += " "
-                }
-
             } 
+            
 
             // apply tags to image
             //console.log("Snail Worker Adding tags: " + tagStr)

@@ -8,7 +8,7 @@ function faces(which) {
     //console.log("objectBot: " + which)
     var tagStr = ""
 
-    var url = "/faces2/?img=" + which //.replace("b.jpg",".jpg")
+    var url = "/face/?img=" + which //.replace("b.jpg",".jpg")
     //console.log("Face Worker fetching url: " + url)
     fetch(url, {
         mode: 'no-cors',
@@ -33,7 +33,6 @@ async function processResponse(response) {
     var output_tags = []
 
     let data = await response.text()
-    //console.log(data)
 
     var jsonData                    
     if (response.body) {
@@ -43,6 +42,7 @@ async function processResponse(response) {
     var output_tags = []
     if (jsonData) {
         if (jsonData) {
+            //console.log(jsonData)
             var faces = jsonData.faces
             if (faces == "undefined") {
                 faces = null

@@ -5,8 +5,11 @@ const http = require('http')
 const express = require('express')
 const app = express()
 
-const hostname = process.env.HOSTNAME
-const port = process.env.PORT_EMOJI
+const hostname = '127.0.0.1'
+const port = 8087
+
+const dotenv = require('dotenv')
+dotenv.config()
 
 var db_user = process.env.DB_USERNAME
 var db_password = process.env.DB_PASSWORD

@@ -8,8 +8,8 @@ function ocrBot(which) {
     //console.log("OCRBot: " + which)
     var tagStr = ""
 
-    var url = "/ocr/ocr.php?img=" + which //.replace("b.jpg",".jpg")
-    //console.log("OCR Worker fetching url: " + url)
+    var url = "/tesseract/?img=" + which //.replace("b.jpg",".jpg")
+    console.log("OCR Worker fetching url: " + url)
     fetch(url, {
         mode: 'no-cors',
         method: 'GET',
@@ -38,64 +38,47 @@ async function processResponse(response) {
     var jsonData                    
     if (response.body) {
         jsonData = JSON.parse(data)
+        //console.log(jsonData)
     }
 
     if (jsonData) {
-        var tagStr = "ocr-" + jsonData.ocr
-
-        if (jsonData.ocr == "true") {
-            var txtTags = jsonData.text
-            text = txtTags.replace("@"," ").replace("\\"," ")
+        item = jsonData[0]
+        
+        if (item.text != "") {
+            var txtTags = item.text
+            text = txtTags.replace("@"," ").replace("\\"," ").replace("\n"," ")
 
             var aTags = txtTags.split(" ")
             var tagged = false
+            textStr = ""
             for (var i = 0; i < aTags.length; i++) {
                 var text = aTags[i]
-                text = text.replace(" ","") // remove spaces
-                text.replace("/","").replace("\\","").replace("+","").replace("@","").replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+                text = text.toString()
+                text = text.replace(/_/g, "") // remove underscores
+                text = text.replace(/ /g,"-") // replace spaces with dashes
+                text.replace("/","").replace("\\","").replace("+","").replace("@","").replace(/[`~!@#$%^&*()_|+=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+                console.log ("OCR READ TEXT: " + text)
 
                 if (text.toString() != "") {
-                    var tagStr = ""
-                    tagStr += "text_"
-
-                    var trunc_text = "" // limit text to avoid overflow
-                    for (var ii = 0; ii < 100; ii++) {
-                        if (text[ii]) {
-                            trunc_text += text[ii]
-                        }
-                    }
-                    tagStr += trunc_text + " "
-
-                    var runOnce = 0
-                    if ((text.length > 2) && i < 1000) { // cap it off
-                        if (runOnce == 0) { 
-                            //tagImage(which, "predict_text")
-                            tags.push("predict_text")
-
-                            emo = String.fromCodePoint("0x1f524")
-
-                            // tagImage(which, "emoji_" + emo)
-                            tags.push("emoji_" + emo)
-                            tagged = true
-
-                            runOnce++
-                        }
-
-                        console.log("Adding tag: " + tagStr)
-                        //tagImage(which, tagStr.replace("\\",""))
-                        tags.push(tagStr.replace("\\",""))
-
-                    }
-                    tagStr = ""
-
-                    tags = [...new Set(tags)]
-                    postMessage(tags)
+                    tagged = true
+                    textStr = textStr + text + "-"
                 }
-                
             }
+            if (textStr != "") {
+                console.log("OCR TEXT: " +  textStr)
+
+                var lastDash = textStr.lastIndexOf('-'); // find the last -
+                textStr = textStr.substr(0, lastDash);
+
+                tags.push("OCR_" + textStr) // remove trailing hyphen
+                console.log("OCR EMOJI: " + item.emoji)
+                tags.push("OCRemoji_" + item.emoji)
+            }
+            tags = [...new Set(tags)]
+            postMessage(tags)               
 
             if (tagged) {
-                console.log("Tagging image with: emoji_" + emo)
+                //console.log("OCR Tagging image with: emoji_" + item.emoji)
             }
         }
     }  

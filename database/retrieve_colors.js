@@ -5,8 +5,8 @@ const http = require('http')
 const express = require('express')
 const app = express()
 
-const hostname = process.env.HOSTNAME
-const port = process.env.PORT_COLORS
+const hostname = '127.0.0.1'
+const port = 8089
 
 const dotenv = require('dotenv')
 dotenv.config()
