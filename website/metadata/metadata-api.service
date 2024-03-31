@@ -1,0 +1,15 @@
+[Unit]
+Description=EXIF REST API Service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=meringue
+WorkingDirectory=/home/meringue/exif/
+ExecStart=/home/meringue/exif/metadata-api.sh 
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target
