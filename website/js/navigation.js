@@ -46,7 +46,6 @@ function init() {
 
 async function preload() {
     var loaded = ""
-    console.log("PRELOAD")
 
     fetch('/emojis/emojis4.json')
     .then((response) => response.json())
@@ -66,8 +65,19 @@ function initAfterPreload(emojis_from_json) {
     initialized = true
 
     var lastImg
+    var runOnce = true
     pred_count = setInterval(function() {
-        //watchPosition(1) // for preferences
+
+        // run the first time on a delay, then run again as normal
+        if (runOnce) {
+            wp = setTimeout(function() {
+                watchPosition(1) // for preferences
+            }, 12000)
+            runOnce = false
+        } else {
+            watchPosition(1) // for preferences
+        }
+        
         clearHTML()
 
         if (windowScreen.innerHTML == "") {
@@ -83,8 +93,6 @@ function initAfterPreload(emojis_from_json) {
 
         tagImage(cur, "action_shown")
         //setPageBackground(cur)
-
-        //prefsNext()
 
         preds = buildDataModel(img.id)
         up = updatePrediction(preds)
@@ -113,8 +121,6 @@ function initAfterPreload(emojis_from_json) {
                         console.log("Starting prefs worker for " + img.id)
                         PREFworker(img.id, username)
                         lastPrefs = img.id
-
-                        //prefsNext()
                     }
                 }
             }
@@ -140,58 +146,6 @@ function initAfterPreload(emojis_from_json) {
        
         skiptime++
     }, 250)
-}
-
-bufferPredsLast = ""
-function prefsNext() {
-
-    // get predictions in json format
-    var buf = document.getElementById("buffer")
-    var buffer_links = buf.getElementsByTagName("a")
-
-    //console.log(buffer_links)
-
-    buf_link = buffer_links[0]
-
-    //console.log(buf_link)
-    buf_link_images = buf_link.getElementsByTagName("img")
-    var next_img_in_buffer = buf_link_images[0]
-    next_img_in_buffer.classList.add("prefs_predict_like")
-
-    var preds
-    preds = buildDataModel(next_img_in_buffer.id)
-    var up = updatePrediction(preds)
-
-    //console.log(up)
-    updateVotesHTML(up, preds)
-
-    //console.log(preds)
-    if (next_img_in_buffer) {
-        if (next_img_in_buffer.id) {
-            img_id = next_img_in_buffer.id
-            img_id = img_id.replace("img-/login/tn/","")
-            preds = buildDataModel(img_id)
-            votes = preds.votes
-            //console.log(votes)
-            if (votes) {
-                primary = votes.first
-                //console.log(preds)
-                if (primary) {
-
-                    //console.log("Primary prefs available for " + img.id)
-                    if ((primary.length > 0) && (bufferPredsLast != img_id)) {
-                        console.log(primary)
-                        console.log("Starting prefs worker for " + img.id)
-                        PREFworker(img_id, username)
-                        bufferPredsLast = img_id
-                    }
-                }
-            }
-
-
-        }
-    }
-        
 }
 
 function getImages(num = 1, buffer = windowBuffer) {
@@ -729,43 +683,28 @@ function watchPosition(pos) {
     var ret = 0
     //var img = document.getElementById(which)
 
-    var screen_links = windowBuffer.getElementsByTagName("a")
-    link = screen_links[2]
+    var buf_el = document.getElementById("buffer")
 
-    img = link.getElementsByTagName("img")[0]
-    console.log(img.id)
+    var buffer_links = buf_el.getElementsByTagName("a")
+    var tmp_link = buffer_links[pos]
 
-    if (img.id != prevPrefs) {
-        console.log("Initiate Preferences: " + img.id)
-        //PREFworker(img.id, username)
-    }
-    prevPrefs = img.id
+    if (tmp_link) {
+        var tmp_img = tmp_link.getElementsByTagName("img")[0]
+        if (tmp_img) {
+            if (tmp_img.id != prevPrefs) {
 
-    //console.log("Watch position: Initiate Preferences")
-    if (windowScreen) {
-        //var screen_links = windowBuffer.getElementsByTagName("a")
-        //link = screen_links[2]
-        //img = link.getElementsByTagName("img")[0]
-        //console.log(img.id)
-        /*
-        //console.log(screen_links)
-        if (screen_links.length > 2) {
-            link = screen_links[2]
-            // get ID
-            img = link.getElementsByTagName("img")[0]
+                var preds = buildDataModel(tmp_img.id)
+                var up = updatePrediction(preds)
 
-            if (img) {
-                console.log(img.id + "==" + lastPrefs)
-                if (img.id != lastPrefs) {
-                    console.log("Initiate Preferences: " + img.id)
-                    //PREFworker(img.id, username)
-                }
+                //console.log(up)
+                updateVotesHTML(up, preds)
+                
+                console.log("Initiate Preferences: " + tmp_img.id)
+                PREFworker(tmp_img.id, username)
             }
-
+            prevPrefs = tmp_img.id
         }
-        */
     }
-    lastPrefs = img.id
 
     //return ret
 }
@@ -922,22 +861,22 @@ function removeLastItem() {
     cnt = 0
 
     var history_links = windowHistory.getElementsByTagName("a")
-    console.log(history_links)
+    //console.log(history_links)
     for (var i = 0; i < history_links.length; i++) {
         
         if (cnt == (history_links.length - 1)) {
             var tmp = history_links.item(i)
-            console.log(tmp)
+            //console.log(tmp)
 
             if (tmp) {
                 if (tmp.id != "loading_image") {
                     anchor = document.getElementById(tmp.id)
                     img = anchor.getElementsByTagName("img")[0]
 
-                    console.log(img)
+                    //console.log(img)
                     
                     var imgData = buildDataModel(img.id)
-                    console.log(imgData)
+                    //console.log(imgData)
                     saveImage(imgData)
                 }
             }
@@ -952,8 +891,8 @@ function removeLastItem() {
 function saveImage(model) {
     model.guid = uuidv4()    
 
-    console.log("SAVE IMAGE")
-    console.log(model)
+    //console.log("SAVE IMAGE")
+    //console.log(model)
 
     if (model) {
         $.ajax({
