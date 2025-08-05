@@ -1,15 +1,74 @@
 <?PHP 
-include("../inc/db.php");
-include("../inc/thumbnail.php");
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-ini_set('session.gc_maxlifetime', 1440);
+include("../inc/db.php");
+include("../inc/security.php");
+include("../inc/thumbnail.php");
+include("../inc/analytics.php");
+
+// Secure path validation function to prevent directory traversal attacks
+function securePath($baseDir, $filename) {
+    // Ensure base directory is absolute and normalized
+    $baseDir = realpath($baseDir);
+    if (!$baseDir) {
+        throw new Exception("Invalid base directory");
+    }
+    
+    // Check for path traversal attempts before sanitization
+    if (strpos($filename, '..') !== false || strpos($filename, '/') !== false || strpos($filename, '\\') !== false) {
+        throw new Exception("Path traversal attempt detected in filename");
+    }
+    
+    // Create secure filename - basename() as additional protection
+    $filename = basename($filename);
+    $fullPath = $baseDir . DIRECTORY_SEPARATOR . $filename;
+    
+    // Verify final path is within base directory (defense in depth)
+    $realFullPath = realpath(dirname($fullPath));
+    if ($realFullPath === false || strpos($realFullPath, $baseDir) !== 0) {
+        throw new Exception("Path traversal attempt detected in final path");
+    }
+    
+    return $fullPath;
+}
+
+// Enhanced session security configuration (matching v3 session_check.php)
+ini_set('session.gc_maxlifetime', 1440); // 24 minutes
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 0);
+ini_set('session.use_strict_mode', 1);
+ini_set('session.cookie_samesite', 'Strict');
+
 session_start();
 
-$email_or_phone = base64_encode(strtolower(trim($_POST["phone"])));
+// Debug: Log that we're processing a login
+error_log("DEBUG: process_login.php started - Query string: " . ($_SERVER['QUERY_STRING'] ?? 'empty'));
+error_log("DEBUG: REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'not set'));
+
+// Regenerate session ID periodically for security
+if (!isset($_SESSION['created'])) {
+    $_SESSION['created'] = time();
+} else if (time() - $_SESSION['created'] > 1800) { // 30 minutes
+    session_regenerate_id(true);
+    $_SESSION['created'] = time();
+}
+
+// Rate limiting and input validation
+$client_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+if (!checkRateLimit($client_ip, 5, 300)) {
+    $redirect = "/login/?validate=rate_limited";
+    header("Location: " . $redirect);
+    exit();
+}
+
+// Sanitize input
+$email_or_phone = isset($_POST["phone"]) ? base64_encode(strtolower(trim(sanitizeInput($_POST["phone"])))) : '';
 //$phone = trim(preg_replace('/\D/', '', $_POST["phone"]));
 
-$target_dir = "./uploads/";
-$target_file = $target_dir . uniqid(); // basename($_FILES["pic"]["name"]);
+$target_dir = "/var/www/html/login/uploads/";
+$target_file = securePath($target_dir, uniqid() . ".tmp"); // Secure path validation
 
 $err = "";
 $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
@@ -18,43 +77,76 @@ $welcome_back = false;
 
 $redirect = "";
 $tn_data = "";
+$uploadOk = 0; // Initialize upload flag
+$tn_path = ""; // Initialize thumbnail path
 
-// Check if image file is a actual image or fake image
-if(isset($_POST["submit"])) {
-  $check = getimagesize($_FILES["pic"]["tmp_name"]);
-  if($check !== false) {
-    // echo "File is an image - " . $check["mime"] . ".";
-    $uploadOk = 1;
+// Debug output - TEMPORARY - Remove in production
+/*
+if(isset($_POST["login_submit"])) {
+    echo "<pre>Debug Info:\n";
+    echo "Form submitted at: " . date('Y-m-d H:i:s') . "\n";
+    echo "Files array: " . print_r($_FILES, true) . "\n";
+    echo "Upload errors: " . ($_FILES['pic']['error'] ?? 'No file') . "\n";
+    echo "Target dir: " . $target_dir . "\n";
+    echo "Target file: " . $target_file . "\n";
+    echo "</pre>";
+    // Uncomment to stop and see debug info:
+    // exit();
+}
+*/
+
+// Enhanced image validation
+if(isset($_POST["login_submit"])) {
+  // Check if file was uploaded without errors
+  if (!isset($_FILES["pic"]) || $_FILES["pic"]["error"] !== UPLOAD_ERR_OK) {
+    $redirect = "/login/?validate=upload_error";
+    $uploadOk = 0;
   } else {
-    // echo "File is not an image.";
-    $redirect = "/login/?validate=not_an_image";
-    $uploadOk = 0;
-  }
-}
-
-// Check if file already exists
-if (file_exists($target_file)) {
-    //echo "Sorry, file already exists.";
-    //$uploadOk = 0;
-}
-  
-  // Check file size
-  if ($_FILES["pic"]["size"] > 500000) {
-    $err = "Sorry, your file is too large.";
-    //echo $err;
-    $redirect = "/login/?validate=too_large";
-    $uploadOk = 0;
-  }
-  
-  // Allow certain file formats
-  //echo "MIME TYPE: " . $check["mime"] . "<br>";
-
-  if ($check["mime"] != "image/jpeg" && $check["mime"] != "image/png"  
-  && $check["mime"] != "image/gif" && $check["mime"] != "image/webp" ) {
-    $err = "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-    //echo $err;
-    $redirect = "/login/?validate=mime_type";
-    $uploadOk = 0;
+    // Validate file is actually an image
+    $check = getimagesize($_FILES["pic"]["tmp_name"]);
+    if($check !== false) {
+      // Additional security: Check for image bombs
+      if ($check[0] > 4096 || $check[1] > 4096) {
+        $redirect = "/login/?validate=image_too_large";
+        $uploadOk = 0;
+      } else {
+        $uploadOk = 1;
+      }
+    } else {
+      $redirect = "/login/?validate=not_an_image";
+      $uploadOk = 0;
+    }
+    
+    // Enhanced file size and type validation
+    if ($uploadOk == 1 && isset($_FILES["pic"]["size"]) && $_FILES["pic"]["size"] > 500000) {
+      $redirect = "/login/?validate=too_large";
+      $uploadOk = 0;
+    }
+    
+    // Strict MIME type validation with whitelist
+    $allowed_types = [
+      "image/jpeg",
+      "image/jpg", 
+      "image/png",
+      "image/gif",
+      "image/webp"
+    ];
+    
+    if ($uploadOk == 1 && isset($check["mime"]) && !in_array($check["mime"], $allowed_types, true)) {
+      $redirect = "/login/?validate=mime_type";
+      $uploadOk = 0;
+    }
+    
+    // Additional file extension validation
+    if ($uploadOk == 1 && isset($_FILES["pic"]["name"])) {
+      $file_extension = strtolower(pathinfo($_FILES["pic"]["name"], PATHINFO_EXTENSION));
+      $allowed_extensions = ["jpg", "jpeg", "png", "gif", "webp"];
+      
+      if (!in_array($file_extension, $allowed_extensions, true)) {
+        $redirect = "/login/?validate=invalid_extension";
+        $uploadOk = 0;
+      }
+    }
   }
   
   // Check if $uploadOk is set to 0 by an error
@@ -64,47 +156,76 @@ if (file_exists($target_file)) {
 
   // if everything is ok, try to upload file
   } else {
-
+    //echo "<p>Attempting to move file from " . $_FILES["pic"]["tmp_name"] . " to " . $target_file . "</p>";
+    
     if (move_uploaded_file($_FILES["pic"]["tmp_name"], $target_file)) {
+      error_log("File uploaded successfully to: " . $target_file);
+      //echo "<p>File moved successfully!</p>";
       //echo "The file ". htmlspecialchars( basename( $_FILES["pic"]["name"])). " has been uploaded to " . $target_file . "<br>";
-      $hash = sha1(file_get_contents($target_file));
+      $hash = hash('sha256', file_get_contents($target_file));
 
-      $tn_path = "/var/www/html/login/tn/" . uniqid();
-      $thumb = new Thumbnail($target_file);
-      $thumb->createThumb($tn_path, 250);
+      $tn_path = securePath("/var/www/html/login/tn/", uniqid() . ".jpg");
+      // echo "<p>Creating thumbnail at: " . $tn_path . "</p>";
+      
+      try {
+        $thumb = new Thumbnail($target_file);
+        $thumb->createThumb($tn_path, 250);
+        // echo "<p>Thumbnail created successfully!</p>";
+      } catch (Exception $e) {
+        //echo "<p>Thumbnail error: " . $e->getMessage() . "</p>";
+        error_log("Thumbnail creation failed: " . $e->getMessage());
+      }
 
       // echo $tn_path . "<br>";
-
-      $tn_data = urlencode(base64_encode(file_get_contents($tn_path)));
-      unlink($target_file);
+      
+      // Check if thumbnail was created successfully
+      if (!file_exists($tn_path)) {
+        //echo "<p>ERROR: Thumbnail file not created at: " . $tn_path . "</p>";
+        $redirect = "/login/?validate=thumbnail_error";
+      } else {
+        //echo "<p>Thumbnail exists, size: " . filesize($tn_path) . " bytes</p>";
+        $tn_data = urlencode(base64_encode(file_get_contents($tn_path)));
+        
+        // Store the web-accessible thumbnail path for ML processing
+        // Convert from filesystem path to web path
+        $_SESSION['login_thumbnail_url'] = str_replace('/var/www/html', '', $tn_path);
+        
+        // Store the full-sized login image for v3 interface
+        $login_image_path = securePath("/var/www/html/login/uploads/", uniqid() . ".jpg");
+        copy($target_file, $login_image_path);
+        $_SESSION['login_image_url'] = str_replace('/var/www/html', '', $login_image_path);
+        
+        unlink($target_file);
+      }
 
         //echo $email_or_phone . "<br>";
 
         //echo $_FILES["pic"]["tmp_name"] . "<br>";
         //echo $hash;
 
-        // Create connection
-        $conn = new mysqli($servername, $username, $password, $dbname);
-        // Check connection
-echo "HERE";
+        // Create secure database connection
+        $conn = getDBConnection();
 
-        if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
+        // Use prepared statement to prevent SQL injection
+        // echo "<p>Looking up hash: " . $hash . "</p>";
+        $sql = "SELECT userID, email, phone, hash FROM Users WHERE hash = ? AND active = true ORDER BY first_login LIMIT 1";
+        $stmt = executeQuery($conn, $sql, "s", [$hash]);
+        
+        if (!$stmt) {
+            $redirect = "/login/?validate=server_error";
+            header("Location: " . $redirect);
+            exit();
         }
-
-        $sql  = "SELECT * FROM Users WHERE ";
-        // $sql .= "(email = '" . $email_or_phone . "' OR phone='" . $email_or_phone . "') ";
-        $sql .= "hash = '" . $hash . "' AND active=true ORDER BY date LIMIT 1";
-
-        // echo $sql;
-
-        $result = $conn->query($sql);
+        
+        $result = $stmt->get_result();
         $activity_sql = "";
 
         if ($result) {
+            //echo "<p>Query returned " . $result->num_rows . " rows</p>";
 
             $username = "";
             if ($result->num_rows > 0) {
+              //echo "<p>User found! Processing login...</p>";
               // output data of each row
                 $welcome_back = true;
                 $userID = 0;
@@ -124,53 +245,132 @@ echo "HERE";
                     // ignore the previous and set the username
                     // to the image hash
                     $_SESSION["username"] = $row["hash"];
-                    $redirect = "/";
+                    $_SESSION["userID"] = $row["userID"];
+                    
+                    // Debug session setting
+                    error_log("LOGIN: Session ID: " . session_id() . " - Setting username: " . $row["hash"] . ", userID: " . $row["userID"]);
+                    
+                    // echo "<p>Session set! UserID: " . $row["userID"] . ", about to redirect...</p>";
+                    
+                    // Update last login timestamp
+                    $update_login = executeQuery($conn, 
+                        "UPDATE Users SET last_login = NOW(), last_ip_address = ?, last_user_agent = ? WHERE userID = ?",
+                        "ssi",
+                        [$_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '', $row["userID"]]
+                    );
+                    if ($update_login) {
+                        $update_login->close();
+                    }
+                    
+                    // Log successful login for security audit
+                    // TEMPORARILY DISABLED: logSecurityEvent('login_success', 'low', 'User logged in successfully', $row["userID"], [
+                    //     'hash_used' => $row["hash"],
+                    //     'welcome_back' => $welcome_back
+                    // ]);
+                    
+                    // Start user session tracking
+                    // TEMPORARILY DISABLED: $sessionID = startUserSession($row["userID"]);
+                    // if ($sessionID) {
+                    //     $_SESSION["sessionID"] = $sessionID;
+                    // }
+                    
+                    // Log user behavior
+                    // TEMPORARILY DISABLED: logUserBehavior($row["userID"], 'login', [
+                    //     'login_method' => 'image_hash',
+                    //     'returning_user' => $welcome_back
+                    // ]);
+                    
+                    $redirect = "/v3/";
 
-                    // Create query for recent activity
-                    $userID = $row["userID"];                    
-                    if ($userID) {
-                        // update activity table
-                        $activity_sql = "INSERT INTO Activity (userID, username, thumbnail) VALUES (" . $userID . ", '" . $username . "','". urldecode($tn_data) . "');";
+                    // Note: Activity table logging removed - using User_Behavior instead
+                    // Thumbnail data stored in session for UI use
+                    if (!empty($tn_data)) {
+                        $_SESSION['login_thumbnail'] = $tn_data;
                     }
                 }
 
             } else {
-                // create an account
+                // echo "<p>No existing user found - creating new account...</p>";
+                // create an account with prepared statement
                 $_SESSION["username"] = $hash;
 
-                $createuser_sql = "INSERT INTO Users (hash, active) VALUES (" . $hash . ", 'true')";
-                $redirect = "/";
-
+                $create_stmt = executeQuery($conn, 
+                    "INSERT INTO Users (hash, active, first_login, last_login, last_ip_address, last_user_agent) VALUES (?, ?, NOW(), NOW(), ?, ?)", 
+                    "siss", 
+                    [$hash, 1, $_SERVER['REMOTE_ADDR'] ?? '', $_SERVER['HTTP_USER_AGENT'] ?? '']
+                );
+                
+                if ($create_stmt) {
+                    $newUserID = $conn->insert_id;
+                    $_SESSION["userID"] = $newUserID;
+                    $create_stmt->close();
+                    
+                    // Log account creation for security audit
+                    // TEMPORARILY DISABLED: logSecurityEvent('account_created', 'low', 'New user account created', $newUserID, [
+                    //     'hash_used' => $hash,
+                    //     'registration_method' => 'image_upload'
+                    // ]);
+                    
+                    // Start user session tracking for new user
+                    // TEMPORARILY DISABLED: $sessionID = startUserSession($newUserID);
+                    // if ($sessionID) {
+                    //     $_SESSION["sessionID"] = $sessionID;
+                    // }
+                    
+                    // Log user behavior
+                    // TEMPORARILY DISABLED: logUserBehavior($newUserID, 'login', [
+                    //     'login_method' => 'image_hash',
+                    //     'new_user' => true
+                    // ]);
+                    
+                    // Store thumbnail data for new users too
+                    if (!empty($tn_data)) {
+                        $_SESSION['login_thumbnail'] = $tn_data;
+                    }
+                    
+                    // Store the web-accessible thumbnail URL for ML processing
+                    if (!empty($_SESSION['login_thumbnail_url'])) {
+                        // Already set above, just making sure it's available for new users
+                    }
+                    
+                    $redirect = "/v3/";
+                } else {
+                    // Log failed account creation
+                    // TEMPORARILY DISABLED: logSecurityEvent('account_creation_failed', 'medium', 'Failed to create new user account', null, [
+                    //     'hash_attempted' => $hash,
+                    //     'error' => 'Database insertion failed'
+                    // ]);
+                    $redirect = "/login/?validate=server_error";
+                }
             }
         } else {
             $redirect = "/login/?validate=server_error";
         }
 
-        // log recent activity
-        if ($createuser_sql) {
-          // echo $activity_sql;
-          $conn->query($createuser_sql);
+        // Close prepared statement and database connection
+        if (isset($stmt)) {
+            $stmt->close();
         }
-
-        // log recent activity
-        if ($activity_sql) {
-            // echo $activity_sql;
-            $conn->query($activity_sql);
-        }
+        $conn->close();
         
 
     } else {
         $err = "Sorry, there was an error uploading your file.";
+        error_log("Failed to move uploaded file. Upload error: " . $_FILES["pic"]["error"]);
+        error_log("Target path: " . $target_file);
         //echo $err;
         $redirect = "/login/?validate=upload_error";
     }
   }
+} // End of if(isset($_POST["login_submit"]))
 
-  // set welcome back flag in session
-  $conn->close();
+  // Database connection already closed above
 
   // set welcome back flag
   if ($redirect) {
+    // Debug logging for redirect path
+    error_log("DEBUG: Taking redirect path with redirect = " . $redirect);
+    error_log("DEBUG: Query string in redirect path: " . ($_SERVER['QUERY_STRING'] ?? 'empty'));
 
     if ($tn_path) {
         $tn_path = str_replace("/var/www/html/login/tn/", "", $tn_path);
@@ -183,13 +383,42 @@ echo "HERE";
         if ($redirect == "/") {
             $redirect = "/?tn=" . $tn_path;
             $redirect .= "&ret=" . $welcome_back;
+            error_log("DEBUG: Modified redirect to include thumbnail: " . $redirect);
         }
-
-
     }
+    
+    // Preserve query string for shared links in redirect path too
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    if (!empty($queryString) && !strpos($redirect, '?')) {
+        $redirect .= '?' . $queryString;
+        error_log("DEBUG: Added query string to redirect: " . $redirect);
+    }
+    
+    error_log("DEBUG: Final redirect URL: " . $redirect);
+    // Debug output (comment out in production)
+    // echo "<p>About to redirect to: " . $redirect . "</p>";
+    // echo "<p><a href='" . $redirect . "'>Click here if not redirected</a></p>";
     header("Location: " . $redirect);
   } else {
-    header("Location: /");
+    // Check if shared link parameters were preserved from original URL
+    $queryString = $_SERVER['QUERY_STRING'] ?? '';
+    $v3Url = '/v3/';
+    
+    // Debug logging
+    error_log("DEBUG: Query string from SERVER: " . $queryString);
+    error_log("DEBUG: REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'not set'));
+    
+    if (!empty($queryString)) {
+        $v3Url .= '?' . $queryString;
+        error_log("Login success: Redirecting to shared link with parameters: " . $queryString);
+    } else {
+        error_log("Login success: No query string found, redirecting to plain /v3/");
+    }
+    
+    // Debug output (comment out in production)
+    // echo "<p>No redirect set, going to homepage</p>";
+    // echo "<p><a href='/'>Click here if not redirected</a></p>";
+    header("Location: " . $v3Url);
   }
 
 ?>

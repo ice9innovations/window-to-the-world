@@ -1,0 +1,133 @@
+{
+  "dataset_info": {
+    "name": "COCO 2017",
+    "total_classes": 80,
+    "description": "Categories and achievements based on COCO dataset object classes"
+  },
+  "achievements": {
+    "animal_kingdom": {
+      "display_name": "Animals",
+      "description": "Discover all animals in the COCO dataset",
+      "coco_classes": ["🧑", "🕊", "😺", "🐶", "🐴", "🐏", "🐄", "🐘", "🐻", "🦓", "🦒"],
+      "target_count": 11,
+      "difficulty": "medium",
+      "points": 550,
+      "badge_emoji": "🦁"
+    },
+    "transportation_master": {
+      "display_name": "Transportation",
+      "description": "Find all modes of transport",
+      "coco_classes": ["🚲", "🚙", "🏍", "🛩", "🚌", "🚂", "🚚", "🚤"],
+      "target_count": 8,
+      "difficulty": "medium",
+      "points": 400,
+      "badge_emoji": "🚗"
+    },
+    "food": {
+      "display_name": "Food",
+      "description": "Discover all food items",
+      "coco_classes": ["🍌", "🍏", "🥪", "🍊", "🥦", "🥕", "🌭", "🍕", "🍩", "🍰"],
+      "target_count": 10,
+      "difficulty": "medium",
+      "points": 500,
+      "badge_emoji": "🍎"
+    },
+    "sports": {
+      "display_name": "Sports",
+      "description": "Discover all sports equipment",
+      "coco_classes": ["🥏", "🎿", "🎿", "⚽", "🪁", "⚾", "⚾", "🛹", "🏄", "🎾"],
+      "target_count": 10,
+      "difficulty": "medium",
+      "points": 500,
+      "badge_emoji": "⚽"
+    },
+    "electronics": {
+      "display_name": "Electronics",
+      "description": "Collect all electronic devices",
+      "coco_classes": ["🖥", "💻", "🖱", "📱", "📱", "⌨️"],
+      "target_count": 6,
+      "difficulty": "medium",
+      "points": 300,
+      "badge_emoji": "💻"
+    },
+    "kitchen": {
+      "display_name": "Kitchen",
+      "description": "Find all kitchen and dining items",
+      "coco_classes": ["🏺", "🍷", "🥛", "🍴", "🗡", "🥄", "🍝", "📻", "🍳", "🍞", "🚰", "🗄"],
+      "target_count": 12,
+      "difficulty": "medium",
+      "points": 600,
+      "badge_emoji": "🍽️"
+    },
+    "furniture": {
+      "display_name": "Furniture",
+      "description": "Discover all furniture pieces",
+      "coco_classes": ["🪑", "🪑", "🌱", "🛏", "🪑", "🚽"],
+      "target_count": 6,
+      "difficulty": "medium",
+      "points": 300,
+      "badge_emoji": "🛋️"
+    },
+    "outdoor": {
+      "display_name": "Outdoor",
+      "description": "Find all outdoor infrastructure",
+      "coco_classes": ["🚦", "🧯", "🛑", "🚦", "🪑"],
+      "target_count": 5,
+      "difficulty": "medium",
+      "points": 250,
+      "badge_emoji": "🚦"
+    },
+    "accessories": {
+      "display_name": "Accessories",
+      "description": "Gather all personal accessories",
+      "coco_classes": ["🎒", "☂️", "👜", "👔", "👜"],
+      "target_count": 5,  
+      "difficulty": "medium",
+      "points": 250,
+      "badge_emoji": "🎒"
+    },
+    "household": {
+      "display_name": "Household",
+      "description": "Find all household items",
+      "coco_classes": ["📚", "⏰", "🏺", "✂️", "🧸", "💈", "🪥"],
+      "target_count": 7,
+      "difficulty": "medium",
+      "points": 350,
+      "badge_emoji": "🕰️"
+    }
+  },
+  "progressive_achievements": {
+    "first_steps": {
+      "display_name": "First Steps",
+      "description": "Discover your first 5 different objects",
+      "target_count": 5,
+      "difficulty": "easy",
+      "points": 100,
+      "badge_emoji": "👶"
+    },
+    "getting_warmed_up": {
+      "display_name": "Getting Warmed Up",
+      "description": "Discover 15 different objects",
+      "target_count": 15,
+      "difficulty": "easy",
+      "points": 200,
+      "badge_emoji": "🔥"
+    },
+    "halfway_hero": {
+      "display_name": "Halfway Hero",
+      "description": "Discover 40 different objects (half of COCO)",
+      "target_count": 40,
+      "difficulty": "medium",
+      "points": 500,
+      "badge_emoji": "🎯"
+    },
+    "coco_completionist": {
+      "display_name": "COCO Completionist",
+      "description": "The ultimate achievement - discover all 80 COCO object classes!",
+      "target_count": 80,
+      "difficulty": "legendary",
+      "points": 2000,
+      "badge_emoji": "👑"
+    }
+  }
+}

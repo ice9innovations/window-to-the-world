@@ -1,0 +1,69 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+server.log
+
+# Debug files
+debug/
+*.backup
+*.bak
+
+# Temporary files and uploads
+temp_images/
+uploads/
+temp/
+tmp/
+
+# Node modules
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# PHP specific
+composer.phar
+/vendor/
+
+# Test files (keep organized test files, remove ad-hoc ones)
+test_*.html
+debug_test.*
+simple_test.php
+
+# Build artifacts
+dist/
+build/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Archive directory (contains old migration scripts)
+archive/
+
+# User uploaded content with PII
+login/uploads/
+login/tn/
+demo/temp_images/
+
+# Duplicate files that should be in organized locations
+style.css
+session_check.php

@@ -32,7 +32,7 @@ unset($_SESSION['username']);
 
                                 <div id="error_message"></div>
 
-                                <form id="login" class="login" action="process_login.php" method="POST" enctype="multipart/form-data" onsubmit="return validate()">
+                                <form id="login" class="login" action="process_login.php<?php echo !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : ''; ?>" method="POST" enctype="multipart/form-data" onsubmit="return validate()">
 
                                     <div id="form_step_one">
                                         <p>
@@ -296,10 +296,13 @@ results against a benchmark. The COCO images have been peer reviewed and do not 
             var error_text = ""
             if (qs.includes("not_uploaded")) { error_text = "There was an error uploading the file" }
             if (qs.includes("not_an_image")) { error_text = "This is not an image file" }
-            if (qs.includes("too_large")) { error_text = "That file is too large" }
-            if (qs.includes("mime_type")) { error_text = "Unsupported image format" }
-            if (qs.includes("server_error")) { error_text = "Server error" }
-            if (qs.includes("upload_error")) { error_text = "Upload error" }
+            if (qs.includes("too_large")) { error_text = "That file is too large (max 500KB)" }
+            if (qs.includes("image_too_large")) { error_text = "Image dimensions too large (max 4096x4096)" }
+            if (qs.includes("mime_type")) { error_text = "Unsupported image format (only JPG, PNG, GIF, WebP allowed)" }
+            if (qs.includes("invalid_extension")) { error_text = "Invalid file extension" }
+            if (qs.includes("server_error")) { error_text = "Server error - please try again" }
+            if (qs.includes("upload_error")) { error_text = "Upload error - please check your file" }
+            if (qs.includes("rate_limited")) { error_text = "Too many attempts. Please wait 5 minutes before trying again." }
             if (qs.includes("not_found")) { error_text = "These are not the droids you are looking for." }
                                     
             if (error_text) {
